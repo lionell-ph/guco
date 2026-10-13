@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GUCO — Guidance and Counseling, BPSU Main Campus</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---------------------------------------------------------------------
+   Page-specific rules for the public landing page only.
+   No brand colours are introduced here — every value below reuses the
+   CSS variables already defined in style.css (--maroon, --cream, etc.)
+   so this page inherits the same palette/typography as the rest of GUCO.
+   --------------------------------------------------------------------- */
+
+body{display:block;} /* this page is not part of the sidebar app-shell */
+
+/* Top navbar (replaces the sidebar for this public-facing page).
+   Starts transparent over the maroon hero band, then picks up a solid
+   cream "layer" with a border/shadow once the page scrolls -- same
+   pattern as the reference site's darkening nav-on-scroll. */
+.site-header{
+  position:sticky;top:0;z-index:30;
+  background:var(--maroon);border-bottom:1px solid transparent;
+  transition:background .25s ease,border-color .25s ease,box-shadow .25s ease;
+}
+.site-header.is-scrolled{
+  background:var(--cream);border-bottom-color:var(--line);
+  box-shadow:0 2px 14px rgba(128,0,32,.10);
+}
+.site-header-inner{
+  max-width:1200px;margin:0 auto;padding:14px clamp(64px,5vw,64px) 14px 4px;
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+}
+.site-header-brand{display:flex;align-items:center;gap:14px;}
+.site-logo{height:44px;display:block;}
+.site-brand-text{
+  font-family:var(--font-eyebrow);font-size:1.05rem;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--cream);
+  transition:color .25s ease;white-space:nowrap;
+}
+.site-header.is-scrolled .site-brand-text{color:var(--maroon);}
+.site-nav{display:flex;align-items:center;gap:28px;}
+.site-nav a{
+  font-family:var(--font-eyebrow);font-size:.75rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  text-decoration:none;color:var(--cream);transition:color .25s ease;
+}
+.site-header.is-scrolled .site-nav a{color:var(--ink-soft);}
+.site-nav a:hover{color:var(--yellow);}
+.site-header.is-scrolled .site-nav a:hover{color:var(--maroon);}
+.site-header-actions{display:flex;align-items:center;gap:18px;}
+/* In-between widths (tablets, small laptops): the brand text, five links and the button no longer fit on one line, so tighten them */
+@media (max-width:1040px){
+  .site-header-inner{padding-right:24px;gap:16px;}
+  .site-nav{gap:16px;}
+  .site-brand-text{font-size:.9rem;letter-spacing:.02em;}
+}
+@media (max-width:900px){ .site-brand-text{display:none;} }
+.site-header-actions .btn{transition:background .25s ease,color .25s ease,border-color .25s ease;}
+.site-header:not(.is-scrolled) .site-header-actions .btn.solid{background:var(--yellow);color:var(--maroon);}
+.site-nav-toggle{display:none;}
+
+/* Hero band -- crest on one side, name + lede on the other, on a flat
+   maroon panel (mirrors the reference site's colour-block intro). */
+.site-hero{
+  background:var(--maroon);color:var(--cream);
+  padding:56px clamp(20px,5vw,64px) 60px;
+}
+.site-hero-inner{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;gap:40px;
+}
+.hero-seal-wrap{position:relative;flex-shrink:0;order:2;display:flex;align-items:center;justify-content:center;margin-right:clamp(0px,3vw,28px);}
+.hero-seal-wrap::before{
+  content:"";position:absolute;inset:-44px;
+  background:radial-gradient(circle,rgba(250,244,234,.95) 0%,rgba(250,244,234,.8) 45%,rgba(250,244,234,0) 75%);
+  z-index:0;
+}
+.hero-seal{position:relative;z-index:1;height:310px;width:auto;display:block;}
+.site-hero-text{flex:1;min-width:0;text-align:left;order:1;}
+.site-hero .eyebrow{color:var(--yellow);}
+.site-hero h1{color:var(--cream);max-width:22ch;margin:0 0 .4em;}
+.site-hero p.lede{color:var(--cream);max-width:56ch;margin:0 0 26px;font-size:1.05rem;opacity:.92;}
+.site-hero-actions{display:flex;gap:14px;flex-wrap:wrap;}
+@media (max-width:760px){
+  .site-hero-inner{flex-direction:column;text-align:center;gap:20px;}
+  .site-hero-text{text-align:center;}
+  .site-hero p.lede{margin-left:auto;margin-right:auto;}
+  .site-hero-actions{justify-content:center;}
+}
+
+/* Feature photo -- full-width campus shot with a caption card layered
+   over the bottom-left corner, same construction as the reference
+   site's photo + overlay-caption block. */
+.site-feature{background:var(--cream);padding:0;}
+.site-feature-media{
+  position:relative;max-width:1200px;margin:0 auto;
+  padding:0 clamp(20px,5vw,64px);margin-top:-1px;
+}
+.site-feature-media img{
+  width:100%;height:clamp(260px,42vw,460px);object-fit:cover;
+  display:block;border-radius:var(--radius-card);
+}
+.site-feature-caption{
+  position:absolute;left:clamp(20px,5vw,64px);right:clamp(20px,5vw,64px);
+  bottom:22px;max-width:560px;
+  background:rgba(42,38,32,.72);backdrop-filter:blur(2px);
+  color:#fff;padding:18px 22px;border-radius:8px;
+}
+.site-feature-caption h3{color:#fff;margin:0 0 6px;font-size:1.15rem;}
+.site-feature-caption p{color:rgba(255,255,255,.88);margin:0;font-size:.9rem;}
+@media (max-width:640px){
+  .site-feature-caption{position:static;max-width:none;border-radius:0 0 10px 10px;}
+}
+
+/* Section rhythm */
+.site-section{max-width:1200px;margin:0 auto;padding:72px clamp(20px,5vw,64px);}
+/* Landing page only: let main go full-width so section backgrounds run
+   edge to edge; padding keeps the content column at 1200px. */
+main{max-width:none;padding:0;}
+#about,#team,#contact{
+  --gutter:clamp(20px,5vw,64px);max-width:none;margin:0;
+  padding-left:max(var(--gutter),calc((100% - 1200px)/2 + var(--gutter)));
+  padding-right:max(var(--gutter),calc((100% - 1200px)/2 + var(--gutter)));
+}
+.site-section-head{max-width:640px;margin:0 auto 40px;text-align:center;}
+.site-section-head .eyebrow{display:block;margin-bottom:8px;}
+.site-section.alt{background:var(--cream-light);}
+
+/* About: faint seal watermark, tucked behind the card grid so it reads
+   as texture/identity rather than decoration competing with content. */
+#about{position:relative;overflow:hidden;background:var(--cream);}
+#about::before{
+  content:"";position:absolute;top:50%;right:-70px;transform:translateY(-50%);
+  width:560px;height:560px;
+  background:url('assets/bpsu-seal.png') center/contain no-repeat;
+  opacity:.05;z-index:0;pointer-events:none;
+}
+#about .site-section-head,#about .about-grid{position:relative;z-index:1;}
+
+/* Team: solid maroon panel breaks the page rhythm and lifts the cream
+   profile cards, instead of another flat white section. */
+#team{background:var(--maroon);}
+#team .eyebrow{color:#D9B45A;}
+#team .site-section-head h2{color:var(--cream);}
+#team .site-section-head p{color:var(--cream);opacity:.82;}
+#team .team-card{background:var(--cream-light);}
+#team .team-avatar{background:var(--cream);color:var(--maroon);}
+#team .team-card.lead .team-avatar{background:#D9B45A;color:var(--maroon);}
+
+/* Contact: plain cream-light band, keeps focus on the contact details. */
+#contact{
+  position:relative;
+  background-color:var(--cream-light);
+}
+
+/* Services section now carries the former "I love BPSU" campus photo
+   as a full-bleed background, with a cream scrim so the cards/text
+   on top stay just as readable as before. */
+#services{
+  position:relative;max-width:none;padding:0;margin:0;
+}
+#services-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(rgba(250,244,234,.6),rgba(250,244,234,.6)),
+             url('assets/bpsu-campus-love.jpg') center/cover no-repeat;
+  z-index:0;
+}
+#services-inner{
+  position:relative;z-index:1;max-width:1200px;margin:0 auto;
+  padding:72px clamp(20px,5vw,64px);
+}
+
+/* Services: 3-up card grid, same .card component as the rest of GUCO */
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+.services-grid .card{display:flex;flex-direction:column;gap:2px;}
+
+/* About: two-column intro + four supporting panels */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px;}
+@media (max-width:760px){.about-grid{grid-template-columns:1fr;}}
+
+/* Team: office structure presented as profile-style cards */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
+.team-card{text-align:center;}
+.team-avatar{
+  width:64px;height:64px;border-radius:50%;margin:0 auto 14px;
+  background:var(--maroon);color:var(--cream);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-heading);font-weight:700;font-size:1.1rem;
+}
+.team-card.lead .team-avatar{background:var(--yellow);color:var(--maroon);}
+
+/* Contact */
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:24px;}
+
+@media (max-width:760px){
+  .site-nav{display:none;}
+  .site-brand-text{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="site-header-brand">
+      <img src="assets/bpsu-seal.png" alt="Bataan Peninsula State University seal" class="site-logo">
+      <span class="site-brand-text">Bataan Peninsula State University</span>
+    </div>
+    <nav class="site-nav">
+      <a href="#home">Home</a>
+      <a href="#services">Services</a>
+      <a href="#about">About</a>
+      <a href="#team">Team</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="site-header-actions">
+      <a href="login.html" class="btn solid">Sign In</a>
+    </div>
+  </div>
+</header>
+
+<section class="site-hero" id="home">
+  <div class="site-hero-inner">
+    <div class="hero-seal-wrap">
+      <img src="assets/guco-logo-hero.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University" class="hero-seal">
+    </div>
+    <div class="site-hero-text">
+      <p class="eyebrow">Bataan Peninsula State University — Main Campus</p>
+      <h1>Support for every step of student life.</h1>
+      <p class="lede">The Guidance and Counseling Office helps you book sessions, reach peer facilitators, and manage requests and records — all from one place.</p>
+      <div class="site-hero-actions">
+        <a href="login.html" class="btn-light">Sign In to GUCO</a>
+        <a href="#services" class="btn-ghost-light">Explore services</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main>
+
+<section class="site-section" id="services">
+  <div id="services-bg"></div>
+  <div id="services-inner">
+  <div class="site-section-head">
+    <span class="eyebrow">Our services</span>
+    <h2>What the office offers</h2>
+    <p>From your first request to your evaluation, everything runs through one system built for Main Campus students.</p>
+  </div>
+  <div class="services-grid">
+    <div class="card">
+      <span class="tag">Requests</span>
+      <h3>Counseling &amp; peer sessions</h3>
+      <p>Book a face-to-face or online session with a counselor or a peer facilitator, and track your request from submission to schedule.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Requests</span>
+      <h3>Documents &amp; interviews</h3>
+      <p>Request exit interviews, good moral certificates, and other documents the office handles, and follow their status online.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Peer program</span>
+      <h3>Peer facilitators</h3>
+      <p>Trained student peers offer a first, informal conversation — a bridge to a counselor, never a replacement for one.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Live</span>
+      <h3>Live sessions</h3>
+      <p>Join scheduled live group sessions run by the office without leaving the portal.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Status</span>
+      <h3>Request tracking</h3>
+      <p>See exactly where a submitted request stands, so you're never left guessing about a session or a document.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Records</span>
+      <h3>History</h3>
+      <p>A running record of your past sessions and requests, kept in one place for you and the office to refer back to.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Evaluation</span>
+      <h3>Session evaluation</h3>
+      <p>Complete a short evaluation after a session — required before booking again or receiving a certificate.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Privacy</span>
+      <h3>Confidential by design</h3>
+      <p>What you share stays between you and the office, with the standard exception of situations where safety is at immediate risk.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Network</span>
+      <h3>Every BPSU campus</h3>
+      <p>Main Campus is covered end to end here; Abucay, Bagac, Balanga, Dinalupihan, and Orani contacts are listed under Contact.</p>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="site-section alt" id="about">
+  <div class="site-section-head">
+    <span class="eyebrow">About us</span>
+    <h2>Support that's easy to reach</h2>
+    <p>The Guidance and Counseling Office (GUCO) at BPSU Main Campus supports students through academic, personal, and emotional concerns, and coordinates with peer facilitators to make that support easier to reach.</p>
+  </div>
+  <div class="about-grid">
+    <div class="card on-maroon">
+      <span class="tag">Our approach</span>
+      <h3 style="color:var(--cream);">Meeting students where they are</h3>
+      <p>Whether it's a scheduled session, a walk-in, or a first conversation with a peer facilitator, the goal is the same: make support easy to reach and confidential by default.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Who we serve</span>
+      <h3>Main Campus students</h3>
+      <p>Every student enrolled at BPSU Main Campus can request sessions, reach peer facilitators, and manage documents through this system.</p>
+    </div>
+    <div class="card">
+      <span class="tag">How it works</span>
+      <h3>One system, three roles</h3>
+      <p>Students submit requests, GUCO personnel schedule and confirm them, and admins keep the records, evaluations, and reports straight.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Our commitment</span>
+      <h3>Confidential, accountable care</h3>
+      <p>Sessions stay private. Evidence, evaluations, and reports keep the office accountable to students and to the university.</p>
+    </div>
+  </div>
+</section>
+
+<section class="site-section" id="team">
+  <div class="site-section-head">
+    <span class="eyebrow">Our team</span>
+    <h2>Who runs the office</h2>
+    <p>The people behind the office, and how support is organized at Main Campus.</p>
+  </div>
+  <div class="team-grid">
+    <div class="card team-card lead">
+      <div class="team-avatar">GD</div>
+      <span class="tag">Head of office</span>
+      <h3>Guidance director</h3>
+      <p>Oversees the office and its counseling staff.</p>
+    </div>
+    <div class="card team-card">
+      <div class="team-avatar">GC</div>
+      <span class="tag">Sessions</span>
+      <h3>Guidance counselors</h3>
+      <p>Handle face-to-face, academic, and follow-up counseling.</p>
+    </div>
+    <div class="card team-card">
+      <div class="team-avatar">PC</div>
+      <span class="tag">Peer program</span>
+      <h3>Peer program coordinator</h3>
+      <p>Manages peer facilitators and the duty roster.</p>
+    </div>
+    <div class="card team-card">
+      <div class="team-avatar">SS</div>
+      <span class="tag">Records</span>
+      <h3>Support staff</h3>
+      <p>Document requests, scheduling, and evaluation records.</p>
+    </div>
+  </div>
+</section>
+
+<section class="site-section alt" id="contact">
+  <div class="site-section-head">
+    <span class="eyebrow">Reach us</span>
+    <h2>Get in touch</h2>
+    <p>Main Campus contact details below. Looking for another BPSU campus? They're listed further down.</p>
+  </div>
+
+  <div class="card on-maroon">
+    <span class="tag">Main campus</span>
+    <h3 style="color:var(--cream)">Guidance and Counseling Office</h3>
+    <p style="margin-bottom:4px;">Facebook: <a href="https://www.facebook.com/bpsumcguidance/" style="color:var(--cream);text-decoration:underline;">facebook.com/bpsumcguidance</a></p>
+    <p style="margin-bottom:4px;">Email: <a href="mailto:guidance_mc@bpsu.edu.ph" style="color:var(--cream);text-decoration:underline;">guidance_mc@bpsu.edu.ph</a></p>
+    <p style="margin-bottom:0;">Contact number: 09688530978</p>
+  </div>
+
+  <div class="contact-grid">
+    <div class="card">
+      <span class="tag">Abucay</span>
+      <h3>Abucay Campus</h3>
+      <p style="margin-bottom:4px;"><a href="https://www.facebook.com/guidanceoffice.abucaycampus">Facebook page</a></p>
+      <p style="margin-bottom:4px;">guidance_ac@bpsu.edu.ph</p>
+      <p style="margin-bottom:0;">09688511505</p>
+    </div>
+    <div class="card">
+      <span class="tag">Bagac</span>
+      <h3>Bagac Campus</h3>
+      <p style="margin-bottom:4px;"><a href="https://www.facebook.com/BPSU-Bagac-Guidance-Admission-Office-104610734561622/">Facebook page</a></p>
+      <p style="margin-bottom:4px;">guidance_bagac@bpsu.edu.ph</p>
+      <p style="margin-bottom:0;">09688530971</p>
+    </div>
+    <div class="card">
+      <span class="tag">Balanga</span>
+      <h3>Balanga Campus</h3>
+      <p style="margin-bottom:4px;"><a href="https://www.facebook.com/profile.php?id=100015402664021">Facebook page</a></p>
+      <p style="margin-bottom:4px;">guidance_bc@bpsu.edu.ph</p>
+      <p style="margin-bottom:0;">237-2633 / 09688530972</p>
+    </div>
+    <div class="card">
+      <span class="tag">Dinalupihan</span>
+      <h3>Dinalupihan Campus</h3>
+      <p style="margin-bottom:4px;"><a href="https://www.facebook.com/guidance.dinalupihancampus">Facebook page</a></p>
+      <p style="margin-bottom:4px;">guidance_dc@bpsu.edu.ph</p>
+      <p style="margin-bottom:0;">09688549348</p>
+    </div>
+    <div class="card">
+      <span class="tag">Orani</span>
+      <h3>Orani Campus</h3>
+      <p style="margin-bottom:4px;"><a href="https://www.facebook.com/BPSUOraniGuidanceandAdmissions/">Facebook page</a></p>
+      <p style="margin-bottom:4px;">guidance_oc@bpsu.edu.ph</p>
+      <p style="margin-bottom:0;">237-2116 / 09688549345</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div>
+      <div class="footer-brand">
+        <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University">
+        <div class="footer-brand-text"><strong>Guidance and Counseling Services</strong><span>Bataan Peninsula State University — Main Campus</span></div>
+      </div>
+      <p style="max-width:34ch;">GUCO is Main Campus's guide to counseling, peer support, and document requests — all in one confidential system.</p>
+      <div class="social-links" style="margin-top:14px;"><a class="social-link" href="https://www.facebook.com/bpsumcguidance/" target="_blank" rel="noopener noreferrer" aria-label="GUCO on Facebook" title="Facebook"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></a></div>
+    </div>
+    <div>
+      <h4>Quick links</h4>
+      <div class="site-footer-links">
+        <a href="#home">Home</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#team">Team</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+    <div>
+      <h4>Contact us</h4>
+      <div class="site-footer-links">
+        <a href="mailto:guidance_mc@bpsu.edu.ph">guidance_mc@bpsu.edu.ph</a>
+        <a href="tel:09688530978">09688530978</a>
+        <a href="https://www.facebook.com/bpsumcguidance/">facebook.com/bpsumcguidance</a>
+      </div>
+    </div>
+  </div>
+  <div class="site-footer-bottom">&copy; 2026 GUCO, BPSU Main Campus. All rights reserved.</div>
+</footer>
+
+<script>
+  // Nav starts transparent over the maroon hero, then picks up its solid
+  // cream "layer" (background, border, shadow, dark text) once the page
+  // has scrolled past the top of the hero band.
+  (function(){
+    var header = document.querySelector('.site-header');
+    function syncHeader(){
+      if(window.scrollY > 40){ header.classList.add('is-scrolled'); }
+      else{ header.classList.remove('is-scrolled'); }
+    }
+    syncHeader();
+    window.addEventListener('scroll', syncHeader, {passive:true});
+  })();
+</script>
+
+</body>
+</html>

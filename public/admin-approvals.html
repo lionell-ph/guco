@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account approvals — GUCO staff</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script>gucoRequireStaff("accounts");</script>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<div class="sidebar-inner">
+<header class="topbar">
+  <div class="topbar-brand">
+    <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University" class="brand-logo">
+    <span class="staff-badge" id="portal-badge">Staff portal</span>
+  </div>
+  <button type="button" class="sidebar-toggle" aria-expanded="false" aria-controls="sidebar-nav">Menu</button>
+  </header>
+<nav class="main-nav" id="sidebar-nav">
+<div class="main-nav-links">
+<a href="admin-dashboard.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Overview</a>
+<a href="admin-requests.html" class="" data-perm="requests"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Requests</a>
+<a href="admin-peers.html" class="" data-perm="peers"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Peer facilitators</a>
+<a href="admin-live.html" class="" data-perm="live"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>Live sessions</a>
+<a href="admin-evaluations.html" class="" data-perm="evaluations"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Evaluations</a>
+<a href="admin-programs.html" class="" data-perm="programs"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Programs</a>
+<a href="admin-holidays.html" class="" data-perm="holidays"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Holidays</a>
+<a href="admin-approvals.html" class="active" data-perm="accounts"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg> Account approvals <span class="nav-badge" id="nav-pending-badge" hidden></span></a>
+<a href="admin-personnel.html" class="" data-perm="admin-only"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg> Personnel</a>
+</div>
+<div class="user-chip"><span class="user-avatar" id="user-initial">G</span><span class="user-meta"><span class="user-role">Signed in as</span><span class="user-email" id="user-email">GUCO staff</span></span></div>
+<a href="#" class="nav-logout" onclick="gucoSignOut();return false;">Sign out</a>
+</nav>
+</div>
+</aside>
+<div class="app-content">
+<main class="admin-main">
+  <div class="admin-header">
+    <div>
+      <span class="admin-eyebrow">Staff portal</span>
+      <h1>Account approvals</h1>
+      <p>New student accounts wait here until you confirm their school ID. Compare the ID with the details they typed in, especially the name and student ID, then approve or reject.</p>
+    </div>
+  </div>
+
+  <div class="appr-tabs" role="tablist">
+    <button type="button" class="appr-tab" id="tab-pending" role="tab" aria-selected="true">Pending <span id="count-pending">0</span></button>
+    <button type="button" class="appr-tab" id="tab-reviewed" role="tab" aria-selected="false">Reviewed</button>
+  </div>
+  <p class="appr-msg" id="appr-msg" role="status" hidden></p>
+
+  <div id="pane-pending">
+    <div class="appr-list" id="pending-list"></div>
+    <p class="empty-state" id="pending-empty" hidden>No accounts are waiting for approval.</p>
+  </div>
+
+  <div id="pane-reviewed" hidden>
+    <div class="panel">
+      <div class="table-scroll">
+        <table class="data" id="reviewed-table">
+          <tr><th>Student</th><th>Student ID</th><th>Email</th><th>Decision</th><th>By</th><th>Date</th><th>Reason</th></tr>
+        </table>
+      </div>
+      <p class="empty-state" id="reviewed-empty" hidden>Nothing reviewed yet. ID photos are deleted once a decision is made.</p>
+    </div>
+  </div>
+</main>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="ID photo">
+  <button type="button" class="lightbox-close" id="lightbox-close">Close</button>
+  <img id="lightbox-img" alt="ID photo, enlarged">
+</div>
+<footer class="site-footer site-footer-slim">
+  <div class="site-footer-slim-inner">
+    <div class="footer-brand">
+      <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University">
+      <div class="footer-brand-text"><strong>GUCO Staff Portal</strong><span>Bataan Peninsula State University — Main Campus</span></div>
+    </div>
+    <div class="slim-links">
+      <a href="mailto:guidance_mc@bpsu.edu.ph">guidance_mc@bpsu.edu.ph</a>
+      <a href="tel:09688530978">09688530978</a>
+      <a href="https://www.facebook.com/bpsumcguidance/" target="_blank" rel="noopener noreferrer">facebook.com/bpsumcguidance</a>
+    </div>
+  </div>
+  <div class="site-footer-bottom">&copy; 2026 GUCO, BPSU Main Campus. All rights reserved.</div>
+</footer>
+</div>
+</div>
+
+<script src="nav.js"></script>
+<script>
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function when(ts) { return ts ? new Date(ts).toLocaleString("en-PH", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""; }
+  function show(text, kind) { var m = $("appr-msg"); m.textContent = text; m.className = "appr-msg " + kind; m.hidden = false; }
+
+  function idTile(url, label) {
+    if (!url) return '<div class="appr-id missing">' + label + ' photo not available</div>';
+    return '<button type="button" class="appr-id" data-zoom="' + esc(url) + '" aria-label="View ' + label + ' full size"><img src="' + esc(url) + '" alt="' + label + ' of school ID"><span>' + label + '</span></button>';
+  }
+
+  function renderPending() {
+    var list = gucoPendingAccounts();
+    $("count-pending").textContent = list.length;
+    $("pending-empty").hidden = list.length > 0;
+    $("pending-list").innerHTML = list.map(function (s) {
+      var ids = gucoGetIds(s.email) || {};
+      return '<article class="card appr-card" data-email="' + esc(s.email) + '">' +
+        '<div class="appr-info">' +
+          '<h3>' + esc(s.name) + '</h3>' +
+          '<div class="appr-email">' + esc(s.email) + '</div>' +
+          '<dl class="appr-meta"><dt>Student ID</dt><dd><strong>' + esc(s.studentId || "—") + '</strong></dd><dt>Last name</dt><dd>' + esc(s.lastName) + '</dd><dt>First name</dt><dd>' + esc(s.firstName) + '</dd>' +
+            '<dt>Middle name</dt><dd>' + esc(s.middleName || "—") + '</dd><dt>Gender</dt><dd>' + esc(s.gender) + '</dd>' +
+            '<dt>Program</dt><dd>' + esc(s.program ? s.program + (s.major && s.major !== "N/A" ? " — " + s.major : "") : "—") + '</dd>' +
+            '<dt>Year level</dt><dd>' + esc(s.yearLevel || "—") + '</dd><dt>Contact</dt><dd>' + esc(s.contact || "—") + '</dd>' +
+            '<dt>Submitted</dt><dd>' + esc(when(s.createdAt)) + '</dd></dl>' +
+          '<p class="appr-tip">Check that the name, student ID and photo on the ID match these details, and that it is a current BPSU student ID. Click a photo to enlarge it.</p>' +
+          '<div class="appr-actions"><button type="button" class="btn solid" data-act="approve">Approve</button><button type="button" class="btn" data-act="reject-open">Reject</button></div>' +
+          '<div class="appr-reject-box"><textarea placeholder="Reason (optional), shown to the student, e.g. ID photo is blurry" maxlength="200"></textarea>' +
+            '<div class="appr-actions"><button type="button" class="btn solid" data-act="reject">Confirm reject</button><button type="button" class="btn" data-act="reject-cancel">Cancel</button></div></div>' +
+        '</div>' +
+        '<div class="appr-ids">' + idTile(ids.front, "Front") + idTile(ids.back, "Back") + '</div>' +
+      '</article>';
+    }).join("");
+  }
+
+  function renderReviewed() {
+    var list = gucoReviewedAccounts();
+    $("reviewed-empty").hidden = list.length > 0;
+    var t = $("reviewed-table");
+    t.innerHTML = '<tr><th>Student</th><th>Student ID</th><th>Email</th><th>Decision</th><th>By</th><th>Date</th><th>Reason</th></tr>' +
+      list.map(function (s) {
+        var ok = s.status === "approved";
+        return '<tr><td>' + esc(s.name) + '</td><td>' + esc(s.studentId || "—") + '</td><td>' + esc(s.email) + '</td>' +
+          '<td><span class="status-pill ' + (ok ? "status-done" : "status-rejected") + '">' + (ok ? "Approved" : "Rejected") + '</span></td>' +
+          '<td>' + esc(s.reviewedBy) + '</td><td>' + esc(when(s.reviewedAt)) + '</td><td>' + esc(s.rejectReason || "") + '</td></tr>';
+      }).join("");
+  }
+
+  function refreshBadge() {
+    var b = $("nav-pending-badge"), n = gucoPendingAccounts().length;
+    if (b) { b.textContent = n; b.hidden = n === 0; }
+  }
+  function renderAll() { renderPending(); renderReviewed(); refreshBadge(); }
+
+  function setTab(which) {
+    var pending = which === "pending";
+    $("pane-pending").hidden = !pending; $("pane-reviewed").hidden = pending;
+    $("tab-pending").setAttribute("aria-selected", pending);
+    $("tab-reviewed").setAttribute("aria-selected", !pending);
+  }
+  $("tab-pending").addEventListener("click", function () { setTab("pending"); });
+  $("tab-reviewed").addEventListener("click", function () { setTab("reviewed"); });
+
+  $("pending-list").addEventListener("click", function (e) {
+    var zoom = e.target.closest("[data-zoom]");
+    if (zoom) { $("lightbox-img").src = zoom.getAttribute("data-zoom"); $("lightbox").classList.add("open"); return; }
+    var btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    var card = btn.closest(".appr-card"), email = card.getAttribute("data-email"), act = btn.getAttribute("data-act");
+    var box = card.querySelector(".appr-reject-box");
+    if (act === "reject-open") { box.classList.add("open"); box.querySelector("textarea").focus(); return; }
+    if (act === "reject-cancel") { box.classList.remove("open"); return; }
+    var res;
+    if (act === "approve") {
+      if (!window.confirm("Approve " + email + "? They will be able to sign in right away.")) return;
+      res = gucoReviewAccount(email, "approved");
+      if (res.ok) show(email + " was approved and can now sign in.", "ok");
+    } else if (act === "reject") {
+      res = gucoReviewAccount(email, "rejected", { reason: box.querySelector("textarea").value });
+      if (res.ok) show(email + " was rejected. They can sign up again with a clearer ID.", "ok");
+    }
+    if (res && !res.ok) show(res.error, "err");
+    renderAll();
+  });
+
+  function closeBox() { $("lightbox").classList.remove("open"); $("lightbox-img").removeAttribute("src"); }
+  $("lightbox-close").addEventListener("click", closeBox);
+  $("lightbox").addEventListener("click", function (e) { if (e.target === this) closeBox(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeBox(); });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

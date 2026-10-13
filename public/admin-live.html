@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live sessions — GUCO staff</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  .video-frame{position:relative;width:100%;max-width:520px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:var(--cream-deep);border:1px solid var(--line);}
+  .video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .preview-msg{margin:0;font-size:.78rem;line-height:1.5;}
+  .preview-msg.warn{color:var(--maroon);}
+  .preview-msg.ok{color:var(--maroon);margin-bottom:8px;}
+  tr.preview-row td{background:var(--cream);padding:14px 10px;}
+  #live-details:focus-visible{outline:2px solid var(--maroon);outline-offset:1px;}
+
+  /* ---- per-session "Upload QR" modal ---- */
+  .qr-modal-backdrop{position:fixed;inset:0;background:rgba(43,20,20,.45);display:none;align-items:center;justify-content:center;z-index:80;padding:20px;}
+  .qr-modal-backdrop.open{display:flex;}
+  .qr-modal{background:var(--cream-light);border:1px solid var(--line);border-radius:8px;max-width:420px;width:100%;padding:22px 24px;box-shadow:0 20px 48px rgba(128,0,32,.25);}
+  .qr-modal h3{margin:0 0 4px;font-family:var(--font-heading);color:var(--maroon-deep);}
+  .qr-modal p.qr-modal-session{margin:0 0 16px;font-size:.8rem;color:var(--ink-soft);}
+  .qr-modal .field{margin-bottom:14px;}
+  .qr-modal-preview{width:130px;height:130px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--ink-soft);margin:0 auto 16px;overflow:hidden;background:#fff;}
+  .qr-modal-preview img{max-width:100%;max-height:100%;object-fit:contain;}
+  .qr-modal-error{color:var(--maroon);font-size:.8rem;margin:0 0 12px;display:none;}
+  .qr-modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+  .qr-modal-actions .btn{padding:8px 16px;font-size:.78rem;cursor:pointer;}
+  .qr-modal-existing-head{margin:0 0 10px;font-family:var(--font-eyebrow);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--maroon);}
+  .qr-modal-existing-list{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+  .qr-modal-existing-item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:#fff;}
+  .qr-modal-existing-item img{width:44px;height:44px;object-fit:contain;flex-shrink:0;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .qr-modal-existing-item span{flex:1;font-size:.78rem;color:var(--ink);line-height:1.3;}
+  .qr-modal-existing-actions{display:flex;gap:6px;flex-shrink:0;}
+  .qr-modal-existing-actions button{background:none;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:.75rem;cursor:pointer;color:var(--ink-soft);}
+  .qr-modal-existing-actions button:hover{border-color:var(--maroon);color:var(--maroon);}
+  .qr-modal-add-head{margin:0 0 12px;font-family:var(--font-eyebrow);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--maroon);}
+</style>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script>gucoRequireStaff('live');</script>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<div class="sidebar-inner">
+<header class="topbar">
+  <div class="topbar-brand">
+    <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University" class="brand-logo">
+    <span class="staff-badge" id="portal-badge">Staff portal</span>
+  </div>
+  <button type="button" class="sidebar-toggle" aria-expanded="false" aria-controls="sidebar-nav">Menu</button>
+  </header>
+<nav class="main-nav" id="sidebar-nav">
+<div class="main-nav-links">
+<a href="admin-dashboard.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Overview</a>
+<a href="admin-requests.html" class="" data-perm="requests"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Requests</a>
+<a href="admin-peers.html" class="" data-perm="peers"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Peer facilitators</a>
+<a href="admin-live.html" class="active" data-perm="live"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>Live sessions</a>
+<a href="admin-evaluations.html" class="" data-perm="evaluations"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Evaluations</a>
+<a href="admin-programs.html" class="" data-perm="programs"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Programs</a>
+<a href="admin-holidays.html" class="" data-perm="holidays"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Holidays</a>
+<a href="admin-approvals.html" class="" data-perm="accounts"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg> Account approvals <span class="nav-badge" id="nav-pending-badge" hidden></span></a>
+<a href="admin-personnel.html" class="" data-perm="admin-only"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg> Personnel</a>
+</div>
+<div class="user-chip"><span class="user-avatar" id="user-initial">G</span><span class="user-meta"><span class="user-role">Signed in as</span><span class="user-email" id="user-email">GUCO staff</span></span></div>
+<a href="#" class="nav-logout" onclick="gucoSignOut();return false;">Sign out</a>
+</nav>
+</div>
+</aside>
+<div class="app-content">
+<main class="admin-main">
+  <div class="admin-header">
+    <div>
+      <span class="admin-eyebrow">Staff portal</span>
+      <h1>Live sessions</h1>
+      <p>Add streams and manage replay links.</p>
+    </div>
+  </div>
+
+
+  <div class="panel">
+    <div class="panel-head"><h2>Upcoming and past streams</h2><button id="add-live-btn" class="btn solid" type="button">Add stream</button></div>
+
+    <form id="live-form" style="display:none;margin-bottom:18px;border-top:1px solid var(--line);padding-top:16px;">
+      <div class="field">
+        <label for="live-title">Title</label>
+        <input type="text" id="live-title" placeholder="e.g. Managing exam stress" required>
+      </div>
+      <div class="field">
+        <label for="live-details">Live details / objective</label>
+        <textarea id="live-details" rows="3" placeholder="e.g. Practical ways to manage exam stress. Students will learn simple breathing and study-planning techniques." required></textarea>
+      </div>
+      <div class="field">
+        <label for="live-link">Facebook link</label>
+        <input type="text" id="live-link" placeholder="https://facebook.com/.../videos/...">
+        <div id="live-preview" style="margin-top:10px;"></div>
+      </div>
+      <p id="live-error" style="display:none;color:var(--maroon);font-size:.82rem;margin-bottom:12px;">Please fill in the title and the live details or objective.</p>
+      <button type="submit" class="btn solid">Save stream</button>
+    </form>
+
+    <div class="table-scroll">
+    <table class="data" id="live-stream-table">
+      <tr><th>Title</th><th>Details / objective</th><th>Platform</th><th>Status</th><th>Feedback</th><th></th></tr>
+    </table>
+    </div>
+    <p class="empty-state" id="live-stream-empty" style="display:none;">No streams yet — use "Add stream" to add one.</p>
+  </div>
+
+</main>
+
+<div class="qr-modal-backdrop" id="qr-modal-backdrop">
+  <div class="qr-modal">
+    <h3>Evaluation QR codes</h3>
+    <p class="qr-modal-session" id="qr-modal-session"></p>
+
+    <div id="qr-modal-existing"></div>
+
+    <p class="qr-modal-add-head">Add a QR code</p>
+    <div class="field">
+      <label for="qr-modal-label">Label shown to students</label>
+      <input type="text" id="qr-modal-label" placeholder="e.g., Scan before you leave">
+    </div>
+    <div class="field">
+      <label for="qr-modal-type">Type</label>
+      <select id="qr-modal-type">
+        <option value="">Other / not tracked</option>
+        <option value="pre">Pre-test</option>
+        <option value="post">Post-test</option>
+        <option value="eval">Post-evaluation</option>
+      </select>
+      <p class="qr-hint">Sets the status chip on the Live sessions table. The label above is what students see.</p>
+    </div>
+    <div class="field">
+      <label for="qr-modal-results">Responses link (optional)</label>
+      <input type="text" id="qr-modal-results" placeholder="Paste the Google Forms responses link">
+      <p class="qr-hint">Staff can jump straight to the live count and answers on Google Forms.</p>
+    </div>
+    <div class="field">
+      <label for="qr-modal-file">QR code image</label>
+      <input type="file" id="qr-modal-file" accept="image/*">
+      <p class="qr-hint">PNG or JPG. It's resized automatically. You can add more than one QR code for this session.</p>
+    </div>
+    <div class="qr-modal-preview" id="qr-modal-preview"><span>Preview</span></div>
+    <p class="qr-modal-error" id="qr-modal-error"></p>
+    <div class="qr-modal-actions">
+      <button type="button" class="btn" id="qr-modal-cancel">Done</button>
+      <button type="button" class="btn solid" id="qr-modal-save">Add QR code</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer site-footer-slim">
+  <div class="site-footer-slim-inner">
+    <div class="footer-brand">
+      <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University">
+      <div class="footer-brand-text"><strong>GUCO Staff Portal</strong><span>Bataan Peninsula State University — Main Campus</span></div>
+    </div>
+    <div class="slim-links">
+      <a href="mailto:guidance_mc@bpsu.edu.ph">guidance_mc@bpsu.edu.ph</a>
+      <a href="tel:09688530978">09688530978</a>
+      <a href="https://www.facebook.com/bpsumcguidance/" target="_blank" rel="noopener noreferrer">facebook.com/bpsumcguidance</a>
+    </div>
+  </div>
+  <div class="site-footer-bottom">&copy; 2026 GUCO, BPSU Main Campus. All rights reserved.</div>
+</footer>
+</div>
+</div>
+
+<script src="requests.js"></script>
+<script>
+  function esc(t) {
+    return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  const addLiveBtn = document.getElementById("add-live-btn");
+  const liveForm = document.getElementById("live-form");
+  addLiveBtn.addEventListener("click", function(){
+    liveForm.style.display = liveForm.style.display === "none" ? "block" : "none";
+  });
+
+  // ---- link preview inside the form (so staff can check the link before saving) ----
+  const linkInput = document.getElementById("live-link");
+  const previewBox = document.getElementById("live-preview");
+  let previewTimer = null;
+  function frameHTML(embed, title) {
+    return "<div class=\"video-frame\"><iframe src=\"" + embed + "\" title=\"" + esc(title) + "\" loading=\"lazy\" allowfullscreen allow=\"autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share\"></iframe></div>";
+  }
+  function updatePreview() {
+    const v = linkInput.value.trim();
+    if (!v) { previewBox.innerHTML = ""; return; }
+    const embed = gucoFbEmbedUrl(v);
+    if (embed) {
+      previewBox.innerHTML = "<p class=\"preview-msg ok\">Preview &mdash; if it says the video isn't available, the video is probably not set to Public on Facebook.</p>" + frameHTML(embed, "Preview");
+    } else {
+      previewBox.innerHTML = "<p class=\"preview-msg warn\">This doesn't look like a Facebook video link, so students will only get a \"Watch\" button, not an inline video. Use the full video link (facebook.com/&hellip;/videos/&hellip;), not a short fb.watch link. You can still save it.</p>";
+    }
+  }
+  linkInput.addEventListener("input", function () {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(updatePreview, 500);
+  });
+
+  const streamTable = document.getElementById("live-stream-table");
+  const streamEmpty = document.getElementById("live-stream-empty");
+
+
+  // A stream's feedback status is read from the labels of its posted QR codes.
+  // A QR whose label contains "pre" is treated as the pre-test, "post" + "eval" as the
+  // post-evaluation, and any other "post" as the post-test.
+  function feedbackChips(sessionId) {
+    const qrs = gucoGetEvalQrs().filter(function(q){ return q.sessionId === sessionId; });
+    const steps = [["pre", "Pre-test"], ["post", "Post-test"], ["eval", "Post-eval"]];
+    const other = qrs.filter(function(q){ return !q.type; });
+    let html = "<div class=\"fb-chips\">" + steps.map(function(st){
+      const q = qrs.find(function(x){ return x.type === st[0]; });
+      if (q) {
+        return "<div class=\"fb-chip on\">" +
+          "<span class=\"fb-chip-main\">&check; " + st[1] + "</span>" +
+          (q.resultsLink
+            ? "<a class=\"fb-view\" href=\"" + esc(q.resultsLink) + "\" target=\"_blank\" rel=\"noopener\">View responses &rarr;</a>"
+            : "<button type=\"button\" class=\"fb-add-link\" data-slot=\"" + sessionId + "|" + st[0] + "\">Add responses link</button>") +
+          "<button type=\"button\" class=\"fb-edit\" data-slot=\"" + sessionId + "|" + st[0] + "\" title=\"Edit\" aria-label=\"Edit " + st[1] + "\">&#9998;</button>" +
+          "</div>";
+      }
+      return "<button type=\"button\" class=\"fb-chip\" data-slot=\"" + sessionId + "|" + st[0] + "\">" + st[1] + "</button>";
+    }).join("");
+    if (other.length) {
+      html += "<div class=\"fb-chip on\"><span class=\"fb-chip-main\">&check; Other (" + other.length + ")</span>" +
+        "<button type=\"button\" class=\"fb-edit\" data-slot=\"" + sessionId + "|other\" title=\"Edit\" aria-label=\"Edit other QR\">&#9998;</button></div>";
+    } else {
+      html += "<button type=\"button\" class=\"fb-chip ghost\" data-slot=\"" + sessionId + "|other\">+ Other QR</button>";
+    }
+    return html + "</div>";
+  }
+
+  function renderStreams() {
+    while (streamTable.rows.length > 1) streamTable.deleteRow(1);
+    const sessions = gucoGetLiveSessions();
+    const qrs = gucoGetEvalQrs();
+    streamEmpty.style.display = sessions.length === 0 ? "block" : "none";
+    sessions.forEach(function(s){
+      const tr = document.createElement("tr");
+      const qrCount = qrs.filter(function(q){ return q.sessionId === s.id; }).length;
+      const qrBtnText = qrCount === 0 ? "Upload QR" : (qrCount === 1 ? "QR code (1)" : "QR codes (" + qrCount + ")");
+      tr.innerHTML =
+        "<td>" + esc(s.title) + "</td><td style=\"max-width:340px;white-space:pre-line;\">" + esc(s.details || s.date || "—") + "</td><td>Facebook Live</td>" +
+        "<td><select class=\"status-select status-" + (s.status === "done" ? "done" : "scheduled") + "\" data-id=\"" + s.id + "\">" +
+          "<option value=\"scheduled\"" + (s.status !== "done" ? " selected" : "") + ">Ongoing</option>" +
+          "<option value=\"done\"" + (s.status === "done" ? " selected" : "") + ">Replay posted</option>" +
+        "</select></td>" +
+        "<td>" + feedbackChips(s.id) + "</td>" +
+        "<td style=\"white-space:nowrap;\">" +
+          (gucoFbEmbedUrl(s.link) ? "<button type=\"button\" class=\"btn\" data-preview=\"" + s.id + "\" style=\"padding:6px 12px;font-size:.75rem;margin-right:4px;\">Preview</button>" : "") +
+          "<button type=\"button\" class=\"btn\" data-remove=\"" + s.id + "\" >Remove</button></td>";
+      streamTable.appendChild(tr);
+    });
+
+    streamTable.querySelectorAll(".status-select").forEach(function(sel){
+      sel.addEventListener("change", function(){
+        gucoUpdateLiveSessionStatus(sel.getAttribute("data-id"), sel.value);
+        sel.className = "status-select status-" + sel.value;
+      });
+    });
+    streamTable.querySelectorAll("[data-preview]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        const tr = btn.closest("tr");
+        const next = tr.nextElementSibling;
+        if (next && next.classList.contains("preview-row")) { next.remove(); btn.textContent = "Preview"; return; }
+        const s = gucoGetLiveSessions().find(function(x){ return x.id === btn.getAttribute("data-preview"); });
+        const embed = s && gucoFbEmbedUrl(s.link);
+        if (!embed) return;
+        const row = document.createElement("tr");
+        row.className = "preview-row";
+        row.innerHTML = "<td colspan=\"5\">" + frameHTML(embed, s.title) + "</td>";
+        tr.after(row);
+        btn.textContent = "Hide";
+      });
+    });
+    streamTable.querySelectorAll("[data-slot]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        const parts = btn.getAttribute("data-slot").split("|");
+        openSlotPopover(btn, parts[0], parts[1]);
+      });
+    });
+    streamTable.querySelectorAll("[data-remove]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        if (!confirm("Remove this stream? Students will no longer see it.")) return;
+        gucoDeleteLiveSession(btn.getAttribute("data-remove"));
+        renderStreams();
+      });
+    });
+  }
+  renderStreams();
+
+  /* ---- per-session "Upload QR" modal ---- */
+  function sessionLabel(s) { return s.title + (s.date ? " — " + s.date : ""); }
+  /* ---- per-slot QR popover (opens from clicking a Pre-test / Post-test / Post-eval chip) ---- */
+  let slotBox = null;
+  function closeSlotPopover(){
+    if (slotBox) { slotBox.remove(); slotBox = null; }
+    window.removeEventListener("scroll", repositionOnScroll, true);
+  }
+  let repositionAnchor = null;
+  function repositionOnScroll(){ if (slotBox && repositionAnchor) positionSlotPopover(slotBox, repositionAnchor); }
+  function positionSlotPopover(box, anchorBtn){
+    repositionAnchor = anchorBtn;
+    const r = anchorBtn.getBoundingClientRect();
+    const w = 280, margin = 12;
+    let left = r.left;
+    if (left + w + margin > window.innerWidth) left = window.innerWidth - w - margin;
+    if (left < margin) left = margin;
+    let top = r.bottom + 6;
+    box.style.left = left + "px";
+    box.style.top = top + "px";
+  }
+  document.addEventListener("click", function(e){
+    if (slotBox && !slotBox.contains(e.target) && !e.target.closest("[data-slot]")) closeSlotPopover();
+  });
+  const slotTitles = { pre: "Pre-test", post: "Post-test", eval: "Post-evaluation", other: "Other QR code" };
+
+  function openSlotPopover(anchorBtn, sessionId, slot) {
+    if (slotBox && slotBox.dataset.slot === sessionId + "|" + slot) { closeSlotPopover(); return; }
+    closeSlotPopover();
+    const session = gucoGetLiveSessions().find(function(s){ return s.id === sessionId; });
+    const existing = slot === "other"
+      ? gucoGetEvalQrs().filter(function(q){ return q.sessionId === sessionId && !q.type; })
+      : gucoGetEvalQrs().filter(function(q){ return q.sessionId === sessionId && q.type === slot; });
+    const current = existing[0] || null;
+
+    const box = document.createElement("div");
+    box.className = "slot-pop";
+    box.dataset.slot = sessionId + "|" + slot;
+    box.innerHTML =
+      "<h4>" + slotTitles[slot] + "</h4>" +
+      "<p class=\"slot-pop-sub\">" + esc(sessionLabel(session)) + "</p>" +
+      "<div class=\"field\"><label>Label shown to students</label>" +
+        "<input type=\"text\" class=\"sp-label\" value=\"" + esc(current ? current.label : sessionLabel(session)) + "\"></div>" +
+      "<div class=\"field\"><label>Responses link (optional)</label>" +
+        "<input type=\"text\" class=\"sp-results\" placeholder=\"Paste the Google Forms responses link\" value=\"" + esc(current ? (current.resultsLink || "") : "") + "\"></div>" +
+      "<div class=\"field\"><label>QR code image" + (current ? " (leave blank to keep the current one)" : "") + "</label>" +
+        "<input type=\"file\" class=\"sp-file\" accept=\"image/*\"></div>" +
+      "<div class=\"slot-pop-preview\">" + (current ? "<img src=\"" + current.image + "\" alt=\"Current QR code\">" : "<span>No QR uploaded yet</span>") + "</div>" +
+      "<p class=\"slot-pop-error\"></p>" +
+      "<div class=\"slot-pop-actions\">" +
+        (current ? "<button type=\"button\" class=\"btn\" data-sp-remove>Remove</button>" : "") +
+        "<button type=\"button\" class=\"btn\" data-sp-cancel>Cancel</button>" +
+        "<button type=\"button\" class=\"btn solid\" data-sp-save>" + (current ? "Save" : "Upload") + "</button>" +
+      "</div>";
+
+    document.body.appendChild(box);
+    slotBox = box;
+    positionSlotPopover(box, anchorBtn);
+    window.addEventListener("scroll", repositionOnScroll, true);
+
+    const fileInput = box.querySelector(".sp-file");
+    const preview = box.querySelector(".slot-pop-preview");
+    const errorEl = box.querySelector(".slot-pop-error");
+    let newImageData = "";
+    fileInput.addEventListener("change", function(){
+      errorEl.textContent = "";
+      const file = fileInput.files[0];
+      if (!file) return;
+      if (!/^image\//.test(file.type)) { errorEl.textContent = "Please choose an image file."; return; }
+      const reader = new FileReader();
+      reader.onload = function(){
+        const img = new Image();
+        img.onload = function(){
+          const canvas = document.createElement("canvas");
+          const max = 300;
+          const scale = Math.min(1, max / Math.max(img.width, img.height));
+          canvas.width = img.width * scale; canvas.height = img.height * scale;
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          newImageData = canvas.toDataURL("image/png");
+          preview.innerHTML = "<img src=\"" + newImageData + "\" alt=\"QR code preview\">";
+        };
+        img.onerror = function(){ errorEl.textContent = "That file couldn't be read as an image."; };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    box.querySelector("[data-sp-cancel]").addEventListener("click", closeSlotPopover);
+    const removeBtn = box.querySelector("[data-sp-remove]");
+    if (removeBtn) removeBtn.addEventListener("click", function(){
+      if (!confirm("Remove this QR code? Students will no longer see it.")) return;
+      gucoDeleteEvalQr(current.id);
+      closeSlotPopover(); renderStreams();
+    });
+    box.querySelector("[data-sp-save]").addEventListener("click", function(){
+      const image = newImageData || (current ? current.image : "");
+      if (!image) { errorEl.textContent = "Choose a QR code image first."; return; }
+      const label = box.querySelector(".sp-label").value.trim() || sessionLabel(session);
+      const resultsLink = box.querySelector(".sp-results").value.trim();
+      if (current) gucoDeleteEvalQr(current.id);
+      const ok = gucoSaveEvalQr({
+        sessionId: sessionId,
+        type: slot === "other" ? "" : slot,
+        label: label,
+        image: image,
+        resultsLink: resultsLink
+      });
+      if (!ok) { errorEl.textContent = "Couldn't save the QR code. Use a PNG, JPG or WebP image under about 2 MB."; return; }
+      closeSlotPopover(); renderStreams();
+    });
+  }
+
+  const qrBackdrop = document.getElementById("qr-modal-backdrop");
+  const qrModalSession = document.getElementById("qr-modal-session");
+  const qrModalExisting = document.getElementById("qr-modal-existing");
+  const qrModalLabel = document.getElementById("qr-modal-label");
+  const qrModalFile = document.getElementById("qr-modal-file");
+  const qrModalPreview = document.getElementById("qr-modal-preview");
+  const qrModalError = document.getElementById("qr-modal-error");
+  let qrModalSessionId = null;
+  let qrModalImageData = "";
+
+  function showQrModalError(msg) { qrModalError.textContent = msg; qrModalError.style.display = "block"; }
+
+  // A session can have several QR codes posted (e.g. one per feedback form) — list them all here.
+  function renderQrModalExisting() {
+    const session = gucoGetLiveSessions().find(function(s){ return s.id === qrModalSessionId; });
+    const items = gucoGetEvalQrs().filter(function(q){ return q.sessionId === qrModalSessionId; });
+    if (!items.length) { qrModalExisting.innerHTML = ""; return; }
+    qrModalExisting.innerHTML =
+      "<p class=\"qr-modal-existing-head\">Posted for this session (" + items.length + ")</p>" +
+      "<div class=\"qr-modal-existing-list\">" +
+      items.map(function(q){
+        const label = q.label || (session ? sessionLabel(session) : "");
+        const typeNames = { pre: "Pre-test", post: "Post-test", eval: "Post-evaluation" };
+        return "<div class=\"qr-modal-existing-item\">" +
+          "<img src=\"" + q.image + "\" alt=\"QR code preview\">" +
+          "<span>" + esc(label) +
+          (typeNames[q.type] ? "<em class=\"type-tag\">" + typeNames[q.type] + "</em>" : "") +
+          (q.resultsLink ? "<a class=\"results-link\" href=\"" + q.resultsLink + "\" target=\"_blank\" rel=\"noopener\">View responses &rarr;</a>" : "") +
+          "</span>" +
+          "<div class=\"qr-modal-existing-actions\">" +
+          "<button type=\"button\" data-edit-id=\"" + esc(q.id) + "\">Edit label</button>" +
+          "<button type=\"button\" data-remove-id=\"" + esc(q.id) + "\">Remove</button>" +
+          "</div></div>";
+      }).join("") +
+      "</div>";
+  }
+
+  qrModalExisting.addEventListener("click", function (e) {
+    const editBtn = e.target.closest("[data-edit-id]");
+    if (editBtn) {
+      const id = editBtn.getAttribute("data-edit-id");
+      const item = gucoGetEvalQrs().find(function(q){ return q.id === id; });
+      if (!item) return;
+      const next = prompt("Label for students:", item.label || "");
+      if (next === null) return;
+      const trimmed = next.trim();
+      if (!trimmed) return;
+      gucoUpdateEvalQrLabel(id, trimmed);
+      renderQrModalExisting();
+      renderStreams();
+      return;
+    }
+    const removeBtn = e.target.closest("[data-remove-id]");
+    if (!removeBtn) return;
+    if (confirm("Remove this QR code? Students will no longer see it.")) {
+      gucoDeleteEvalQr(removeBtn.getAttribute("data-remove-id"));
+      renderQrModalExisting();
+      renderStreams();
+    }
+  });
+
+  function openQrModal(sessionId) {
+    const session = gucoGetLiveSessions().find(function(s){ return s.id === sessionId; });
+    if (!session) return;
+    qrModalSessionId = sessionId;
+    qrModalImageData = "";
+    qrModalSession.textContent = "For: " + sessionLabel(session);
+    qrModalError.style.display = "none";
+    qrModalFile.value = "";
+    qrModalLabel.value = sessionLabel(session);
+    document.getElementById("qr-modal-type").value = "";
+    qrModalPreview.innerHTML = "<span>Preview</span>";
+    renderQrModalExisting();
+    qrBackdrop.classList.add("open");
+  }
+  function closeQrModal() { qrBackdrop.classList.remove("open"); }
+
+  document.getElementById("qr-modal-cancel").addEventListener("click", closeQrModal);
+  qrBackdrop.addEventListener("click", function(e){ if (e.target === qrBackdrop) closeQrModal(); });
+
+  qrModalFile.addEventListener("change", function () {
+    qrModalError.style.display = "none";
+    const file = qrModalFile.files[0];
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { showQrModalError("Please choose an image file."); return; }
+    const reader = new FileReader();
+    reader.onload = function () {
+      const img = new Image();
+      img.onload = function () {
+        const max = 600;
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        qrModalImageData = canvas.toDataURL("image/png");
+        qrModalPreview.innerHTML = "<img src=\"" + qrModalImageData + "\" alt=\"QR code preview\">";
+      };
+      img.onerror = function () { showQrModalError("That file couldn't be read as an image."); };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("qr-modal-save").addEventListener("click", function () {
+    if (!qrModalImageData) { showQrModalError("Choose a QR code image first."); return; }
+    const session = gucoGetLiveSessions().find(function(s){ return s.id === qrModalSessionId; });
+    if (!session) return;
+    const label = qrModalLabel.value.trim() || sessionLabel(session);
+    const type = document.getElementById("qr-modal-type").value;
+    const saved = gucoSaveEvalQr({
+      type: type,
+      sessionId: session.id,
+      sessionTitle: session.title,
+      sessionDate: session.date || "",
+      label: label,
+      image: qrModalImageData,
+      saved: new Date().toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })
+    });
+    if (!saved) { showQrModalError("Couldn't save the QR code. Use a PNG, JPG or WebP image under about 2 MB. Remove an old QR code and try again."); return; }
+    qrModalError.style.display = "none";
+    qrModalFile.value = "";
+    qrModalImageData = "";
+    qrModalLabel.value = sessionLabel(session);
+    qrModalPreview.innerHTML = "<span>Preview</span>";
+    renderQrModalExisting();
+    renderStreams();
+  });
+
+  liveForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    const title = document.getElementById("live-title").value.trim();
+    const details = document.getElementById("live-details").value.trim();
+    const link = document.getElementById("live-link").value.trim();
+    const err = document.getElementById("live-error");
+    if (!title || !details) { err.style.display = "block"; return; }
+    err.style.display = "none";
+    gucoSaveLiveSession({ title: title, details: details, link: link || "#" });
+    renderStreams();
+    this.reset();
+    previewBox.innerHTML = "";
+    liveForm.style.display = "none";
+  });
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

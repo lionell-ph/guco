@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Requests — GUCO staff</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  .evidence-modal-backdrop{position:fixed;inset:0;background:rgba(43,20,20,.45);display:none;align-items:center;justify-content:center;z-index:80;padding:20px;}
+  .evidence-modal-backdrop.open{display:flex;}
+  .evidence-modal{background:var(--cream-light);border:1px solid var(--line);border-radius:8px;max-width:440px;width:100%;padding:22px 24px;box-shadow:0 20px 48px rgba(128,0,32,.25);}
+  .evidence-modal h3{margin:0 0 6px;font-family:var(--font-heading);color:var(--maroon-deep);}
+  .evidence-modal p{margin:0 0 16px;font-size:.85rem;color:var(--ink-soft);line-height:1.5;}
+  .evidence-drop{border:1px solid var(--line);border-radius:6px;padding:18px;text-align:center;margin-bottom:12px;}
+  .evidence-drop input[type="file"]{font-size:.82rem;width:100%;}
+  .evidence-preview{max-width:100%;max-height:220px;border-radius:6px;border:1px solid var(--line);display:none;margin:0 0 12px;}
+  .evidence-error{color:var(--maroon);font-size:.8rem;margin:0 0 12px;display:none;}
+  .evidence-actions{display:flex;gap:10px;justify-content:flex-end;}
+  .evidence-actions .btn{padding:8px 16px;font-size:.78rem;cursor:pointer;}
+  .email-mode{display:flex;flex-direction:column;gap:4px;align-self:flex-end;font-size:.78rem;color:var(--ink-soft);}
+  .email-mode select{padding:6px 10px;border:1px solid var(--line);border-radius:var(--radius-card);background:var(--cream-light);color:var(--ink);font:inherit;}
+  .evidence-thumb-btn{display:inline-block;margin-left:6px;padding:3px 9px;font-size:.75rem;border:1px solid var(--line);border-radius:var(--radius-card);background:var(--cream);color:var(--maroon);cursor:pointer;white-space:nowrap;}
+  .lightbox-backdrop{position:fixed;inset:0;background:rgba(20,10,10,.72);display:none;align-items:center;justify-content:center;z-index:90;padding:24px;}
+  .lightbox-backdrop.open{display:flex;}
+  .lightbox-backdrop img{max-width:100%;max-height:85vh;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.4);}
+  .lightbox-backdrop .lightbox-close{position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;line-height:1;}
+
+  /* ---- request board: Pending / Scheduled side by side in Active view,
+     Completed alone (full width) in the Completed view -- same visual
+     language as the student history page, so staff and students see a
+     consistent system. ---- */
+  .req-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start;}
+  @media (max-width:820px){.req-board{grid-template-columns:minmax(0,1fr);}}
+  .req-board.single{grid-template-columns:minmax(0,1fr);}
+  .req-col{background:var(--cream-light);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px 20px;box-shadow:0 2px 10px rgba(90,30,20,.05);}
+  .req-col-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+  .req-col-icon{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cream-light);}
+  .req-col-icon svg{width:15px;height:15px;}
+  .req-col[data-status="scheduled"] .req-col-icon{background:var(--maroon);}
+  .req-col[data-status="done"] .req-col-icon{background:#c23955;}
+  .req-col-head h3{margin:0;font-size:.98rem;color:var(--maroon);}
+  .req-col-head p{margin:2px 0 0;font-size:.75rem;color:var(--ink-soft);}
+  .req-col-count{margin-left:auto;flex-shrink:0;font-family:var(--font-eyebrow);font-size:.75rem;font-weight:700;border-radius:var(--radius-card);padding:3px 9px;}
+  .req-col[data-status="scheduled"] .req-col-count{background:rgba(128,0,32,.10);color:var(--maroon);}
+  .req-col[data-status="done"] .req-col-count{background:rgba(194,57,85,.14);color:#c23955;}
+
+  /* Pending mirrors the hero stat card above it -- the one that needs a person to act. */
+  .req-col[data-status="pending"]{background:var(--maroon);border-color:var(--maroon);}
+  .req-col[data-status="pending"] .req-col-head{border-bottom-color:rgba(243,230,213,.22);}
+  .req-col[data-status="pending"] .req-col-icon{background:rgba(255,246,239,.18);color:var(--yellow);}
+  .req-col[data-status="pending"] .req-col-head h3{color:var(--cream);}
+  .req-col[data-status="pending"] .req-col-head p{color:rgba(243,230,213,.72);}
+  .req-col[data-status="pending"] .req-col-count{background:rgba(255,246,239,.18);color:var(--cream);}
+  .req-col[data-status="pending"] .status-empty{border-color:rgba(243,230,213,.35);color:rgba(243,230,213,.85);background:rgba(243,230,213,.08);}
+
+  .req-col-list{display:flex;flex-direction:column;gap:10px;}
+  .req-card{display:flex;align-items:flex-start;gap:11px;background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:12px 13px;}
+  .req-col[data-status="pending"] .req-card{background:rgba(243,230,213,.09);border-color:rgba(243,230,213,.25);}
+  .req-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:.75rem;font-weight:700;color:var(--cream-light);background:var(--maroon);}
+  .req-col[data-status="pending"] .req-avatar{background:rgba(255,246,239,.2);color:var(--cream);}
+  .req-col[data-status="done"] .req-avatar{background:#c23955;}
+  .req-card-body{flex:1;min-width:0;}
+  .req-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:2px;}
+  .req-card-top h4{margin:0;font-size:.85rem;line-height:1.25;color:var(--ink);font-family:var(--font-body);font-weight:700;}
+  .req-col[data-status="pending"] .req-card-top h4{color:var(--cream);}
+  .req-card-body p{margin:3px 0 0;font-size:.76rem;color:var(--ink-soft);}
+  .req-col[data-status="pending"] .req-card-body p{color:rgba(243,230,213,.75);}
+  .req-card-body .status-select{margin-top:0;}
+</style>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script>gucoRequireStaff('requests');</script>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<div class="sidebar-inner">
+<header class="topbar">
+  <div class="topbar-brand">
+    <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University" class="brand-logo">
+    <span class="staff-badge" id="portal-badge">Staff portal</span>
+  </div>
+  <button type="button" class="sidebar-toggle" aria-expanded="false" aria-controls="sidebar-nav">Menu</button>
+  </header>
+<nav class="main-nav" id="sidebar-nav">
+<div class="main-nav-links">
+<a href="admin-dashboard.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Overview</a>
+<a href="admin-requests.html" class="active" data-perm="requests"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Requests</a>
+<a href="admin-peers.html" class="" data-perm="peers"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Peer facilitators</a>
+<a href="admin-live.html" class="" data-perm="live"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>Live sessions</a>
+<a href="admin-evaluations.html" class="" data-perm="evaluations"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Evaluations</a>
+<a href="admin-programs.html" class="" data-perm="programs"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Programs</a>
+<a href="admin-holidays.html" class="" data-perm="holidays"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Holidays</a>
+<a href="admin-approvals.html" class="" data-perm="accounts"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg> Account approvals <span class="nav-badge" id="nav-pending-badge" hidden></span></a>
+<a href="admin-personnel.html" class="" data-perm="admin-only"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg> Personnel</a>
+</div>
+<div class="user-chip"><span class="user-avatar" id="user-initial">G</span><span class="user-meta"><span class="user-role">Signed in as</span><span class="user-email" id="user-email">GUCO staff</span></span></div>
+<a href="#" class="nav-logout" onclick="gucoSignOut();return false;">Sign out</a>
+</nav>
+</div>
+</aside>
+<div class="app-content">
+<main class="admin-main">
+  <div class="admin-header">
+    <div>
+      <span class="admin-eyebrow">Staff portal</span>
+      <h1>Requests</h1>
+      <p>Counseling sessions, document requests, and exit interviews — Main Campus.</p>
+    </div>
+    <div class="email-mode">
+      <label for="email-mode-select">When scheduling, open email in</label>
+      <select id="email-mode-select">
+        <option value="gmail">Gmail (opens in a new tab)</option>
+        <option value="mailto">Mail app on this computer</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="stat-grid" id="req-stats"></div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Submitted through the website</h2></div>
+    <div id="view-tabs" style="display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 18px;"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+      <input type="text" id="req-search" placeholder="Search by name, reference, or type" class="ctl ctl-sm ctl-grow">
+      <select id="req-program-filter" class="ctl ctl-sm">
+        <option value="">All programs</option>
+      </select>
+      <select id="req-year-filter" class="ctl ctl-sm">
+        <option value="">All year levels</option>
+      </select>
+    </div>
+
+    <p class="eyebrow" id="kind-heading" style="margin:0 0 10px;">What kind of request?</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 24px;" id="req-kind-tabs"></div>
+
+    <div id="req-sections"></div>
+
+    <p class="empty-state" id="live-empty" style="display:none;">No requests submitted through the site yet.</p>
+    <p class="empty-state" id="live-no-match" style="display:none;">No requests match your search.</p>
+  </div>
+
+</main>
+
+<div class="evidence-modal-backdrop" id="evidence-backdrop">
+  <div class="evidence-modal" role="dialog" aria-label="Confirm the session happened">
+    <h3>Confirm the session happened</h3>
+    <p id="evidence-instructions">Upload proof before this request can be marked Completed.</p>
+    <div class="evidence-drop">
+      <input type="file" id="evidence-file" accept="image/*">
+    </div>
+    <img id="evidence-preview" class="evidence-preview" alt="Preview of the uploaded proof">
+    <p class="evidence-error" id="evidence-error">Please choose an image under 4 MB.</p>
+    <div class="evidence-actions">
+      <button type="button" class="btn" id="evidence-cancel">Cancel</button>
+      <button type="button" class="btn solid" id="evidence-confirm">Mark complete</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox-backdrop" id="lightbox-backdrop">
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
+  <img id="lightbox-img" alt="Session evidence">
+</div>
+
+<footer class="site-footer site-footer-slim">
+  <div class="site-footer-slim-inner">
+    <div class="footer-brand">
+      <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University">
+      <div class="footer-brand-text"><strong>GUCO Staff Portal</strong><span>Bataan Peninsula State University — Main Campus</span></div>
+    </div>
+    <div class="slim-links">
+      <a href="mailto:guidance_mc@bpsu.edu.ph">guidance_mc@bpsu.edu.ph</a>
+      <a href="tel:09688530978">09688530978</a>
+      <a href="https://www.facebook.com/bpsumcguidance/" target="_blank" rel="noopener noreferrer">facebook.com/bpsumcguidance</a>
+    </div>
+  </div>
+  <div class="site-footer-bottom">&copy; 2026 GUCO, BPSU Main Campus. All rights reserved.</div>
+</footer>
+</div>
+</div>
+
+<script src="requests.js"></script>
+<script>
+  const kindTabsEl = document.getElementById("req-kind-tabs");
+  const kindHeadingEl = document.getElementById("kind-heading");
+  const programFilterEl = document.getElementById("req-program-filter");
+  const yearFilterEl = document.getElementById("req-year-filter");
+  const sectionsEl = document.getElementById("req-sections");
+  const liveEmpty = document.getElementById("live-empty");
+  const liveNoMatch = document.getElementById("live-no-match");
+  const searchInput = document.getElementById("req-search");
+  const allItems = gucoGetRequests();
+
+  const STATUS_LABEL = { pending: "Pending", scheduled: "Scheduled", done: "Completed" };
+  const STATUS_EMPTY_TEXT = {
+    pending: "No pending requests right now.",
+    scheduled: "Nothing scheduled at the moment.",
+    done: "No completed requests yet."
+  };
+  const STATUS_ORDER = ["pending", "scheduled", "done"];
+  // Active = still needs attention; History = done and out of the way.
+  const ACTIVE_STATUSES = ["pending", "scheduled"];
+  const HISTORY_STATUSES = ["done"];
+  const viewTabsEl = document.getElementById("view-tabs");
+  let currentView = "active";
+
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g, function(c){
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function icon(path) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + '</svg>';
+  }
+
+  /* ---- status stat cards ---- */
+  function renderStatCards() {
+    const counts = { pending: 0, scheduled: 0, done: 0 };
+    allItems.forEach(function (r) { if (counts[r.status] !== undefined) counts[r.status]++; });
+    const cards = [
+      { cls: "stat-hero", status: "pending", num: counts.pending, label: "Pending",
+        note: counts.pending ? "Needs a response" : "All caught up",
+        ico: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>' },
+      { status: "scheduled", num: counts.scheduled, label: "Scheduled", note: counts.scheduled === 1 ? "1 request" : counts.scheduled + " requests",
+        ico: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
+      { status: "done", num: counts.done, label: "Completed", note: counts.done === 1 ? "1 request" : counts.done + " requests",
+        ico: '<circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/>' }
+    ];
+    document.getElementById("req-stats").innerHTML = cards.map(function (c) {
+      return '<button type="button" class="stat-card ' + (c.cls || "") + '" data-jump-status="' + c.status + '" style="cursor:pointer;text-align:left;font-family:inherit;border:none;width:100%;appearance:none;">' +
+        '<span class="stat-ico">' + icon(c.ico) + '</span>' +
+        '<span class="num">' + c.num + '</span>' +
+        '<span class="label">' + c.label + '</span>' +
+        '<span class="stat-note">' + c.note + '</span></button>';
+    }).join("");
+
+    document.querySelectorAll("[data-jump-status]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const status = btn.getAttribute("data-jump-status");
+        const targetView = status === "done" ? "history" : "active";
+        if (currentView !== targetView) { currentView = targetView; render(); }
+        const section = document.getElementById("status-section-" + status);
+        if (!section) return;
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        section.style.transition = "background-color .3s ease";
+        section.style.backgroundColor = "rgba(128,0,32,.06)";
+        section.style.borderRadius = "var(--radius)";
+        setTimeout(function () { section.style.backgroundColor = "transparent"; }, 900);
+      });
+    });
+  }
+
+  // ---- Active / History tabs: keeps completed requests out of the way until asked for ----
+  function renderViewTabs() {
+    const activeCount = allItems.filter(function (i) { return ACTIVE_STATUSES.indexOf(i.status) !== -1; }).length;
+    const historyCount = allItems.filter(function (i) { return HISTORY_STATUSES.indexOf(i.status) !== -1; }).length;
+    viewTabsEl.innerHTML =
+      "<button type=\"button\" class=\"history-tab" + (currentView === "active" ? " active" : "") + "\" data-view=\"active\">Active (" + activeCount + ")</button>" +
+      "<button type=\"button\" class=\"history-tab" + (currentView === "history" ? " active" : "") + "\" data-view=\"history\">Completed (" + historyCount + ")</button>";
+    viewTabsEl.querySelectorAll("[data-view]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const v = btn.getAttribute("data-view");
+        if (currentView === v) return;
+        currentView = v;
+        render();
+      });
+    });
+  }
+  // Session requests show their preferred date; document requests show notes.
+  // A session's own notes (e.g. the platform picked for online counseling) are shown too, on their own line.
+  function detailsHTML(item) {
+    const lines = [];
+    if (item.group === "session") {
+      if (item.preferred && item.preferred !== "—") lines.push(esc(item.preferred));
+      if (item.notes && item.notes !== "—") lines.push(esc(item.notes));
+    } else {
+      if (item.notes && item.notes !== "—") lines.push(esc(item.notes));
+    }
+    return lines.length ? lines.join("<br>") : "";
+  }
+
+  /* ---- manual email dispatch ----
+     Choosing Scheduled opens the staff member's own email with the student's address, subject, and body filled in.
+     Nothing is sent automatically. "gmail" opens a Gmail compose tab (no mail app needed);
+     "mailto" uses the computer's default mail app. Each staff member's choice is remembered
+     on their own computer; Gmail is the default. */
+  const EMAIL_MODE_KEY = "guco_email_mode";
+  let EMAIL_MODE = "gmail";
+  try { if (localStorage.getItem(EMAIL_MODE_KEY) === "mailto") EMAIL_MODE = "mailto"; } catch (e) {}
+  const emailModeSelect = document.getElementById("email-mode-select");
+  emailModeSelect.value = EMAIL_MODE;
+  emailModeSelect.addEventListener("change", function () {
+    EMAIL_MODE = emailModeSelect.value === "mailto" ? "mailto" : "gmail";
+    try { localStorage.setItem(EMAIL_MODE_KEY, EMAIL_MODE); } catch (e) {}
+  });
+
+  function studentEmailFor(item) {
+    const a = (item.accountEmail || "").trim();
+    if (a.indexOf("@") > 0) return a;
+    const c = (item.contact || "").trim();
+    return c.indexOf("@") > 0 ? c : "";
+  }
+
+  function emailLinkFor(item) {
+    const to = studentEmailFor(item);
+    if (!to) return "";
+    const first = String(item.name || "").trim().split(/\s+/)[0] || "Student";
+    const statusLine = {
+      pending: "We have received your request and it is waiting for review.",
+      scheduled: "[Add the date, time, and venue here]",
+      done: "Your request has been completed. You may rate the service in the GUCO portal under Evaluation."
+    }[item.status] || "";
+    const subject = "GUCO request " + item.ref + ": " + STATUS_LABEL[item.status];
+    const body = "Hello " + first + ",\n\n" +
+      "Your " + item.label + " request (Ref " + item.ref + ") is now " + STATUS_LABEL[item.status] + ".\n\n" +
+      statusLine + "\n\n" +
+      "Guidance and Counseling Office\nBataan Peninsula State University, Main Campus";
+    if (EMAIL_MODE === "gmail") {
+      return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(to) +
+        "&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    }
+    return "mailto:" + encodeURIComponent(to) + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  }
+
+  function statusControlHTML(item) {
+    const opts = STATUS_ORDER.map(function(s){
+      return "<option value=\"" + s + "\"" + (item.status === s ? " selected" : "") + ">" + STATUS_LABEL[s] + "</option>";
+    }).join("");
+    const select = "<select class=\"status-select status-" + item.status + "\" data-ref=\"" + item.ref + "\">" + opts + "</select>";
+    const viewBtn = item.evidence
+      ? "<button type=\"button\" class=\"evidence-thumb-btn\" data-view-evidence=\"" + item.ref + "\">View proof</button>"
+      : "";
+    return select + viewBtn;
+  }
+
+  // Two-letter monogram from a request's label, matching the avatars on the student history page.
+  function initialsFor(label) {
+    const words = (label || "").split(/\s+/).filter(function (w) { return w && w.toLowerCase() !== "to" && w.toLowerCase() !== "of"; });
+    if (words.length === 0) return "?";
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+
+  function buildCard(item) {
+    const card = document.createElement("div");
+    card.className = "req-card";
+    const details = detailsHTML(item);
+    card.innerHTML =
+      "<span class=\"req-avatar\">" + initialsFor(item.label) + "</span>" +
+      "<div class=\"req-card-body\">" +
+      "<div class=\"req-card-top\"><h4>" + esc(item.label) + "</h4>" +
+      "<div style=\"display:flex;flex-direction:column;align-items:flex-end;gap:6px;\">" + statusControlHTML(item) + "</div></div>" +
+      "<p>Ref " + esc(item.ref) + " &middot; Submitted " + item.submitted + "</p>" +
+      "<p>" + esc(item.name) + " &middot; " + esc(item.contact) + "</p>" +
+      (item.program ? "<p>" + esc(item.program) + (item.yearLevel ? " &middot; " + esc(item.yearLevel) : "") + "</p>" : "") +
+      (details ? "<p>" + details + "</p>" : "") +
+      "</div>";
+    return card;
+  }
+
+  // Shared chip-row builder used for kind, program, and year level filters below.
+  function chipButton(label, count, active, onClick) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.style.cssText = "font-family:var(--font-body);font-size:.82rem;font-weight:600;cursor:pointer;" +
+      "border-radius:20px;padding:8px 16px;background:" + (active ? "var(--maroon)" : "var(--cream-deep)") +
+      ";color:" + (active ? "#fff" : "var(--ink)") + ";border:1px solid " + (active ? "var(--maroon)" : "var(--line)") + ";";
+    chip.textContent = count === null ? label : label + " (" + count + ")";
+    chip.addEventListener("click", onClick);
+    return chip;
+  }
+
+  // Kind chips built from the request types actually on file, session kinds before document kinds.
+  let currentKind = "all";
+  function renderKindTabs() {
+    kindTabsEl.innerHTML = "";
+    const seen = {};
+    const kinds = [];
+    allItems.forEach(function (item) {
+      if (!seen[item.type]) { seen[item.type] = true; kinds.push(item.type); }
+    });
+    kinds.sort(function (a, b) {
+      return Object.keys(REQUEST_TYPES).indexOf(a) - Object.keys(REQUEST_TYPES).indexOf(b);
+    });
+
+    if (kinds.length < 2) {
+      kindHeadingEl.style.display = "none";
+      kindTabsEl.style.display = "none";
+      return;
+    }
+    kindHeadingEl.style.display = "";
+    kindTabsEl.style.display = "flex";
+
+    kindTabsEl.appendChild(chipButton("All", allItems.length, currentKind === "all", function () { currentKind = "all"; render(); }));
+    kinds.forEach(function (type) {
+      const label = (REQUEST_TYPES[type] && REQUEST_TYPES[type].label) || type;
+      const count = allItems.filter(function (i) { return i.type === type; }).length;
+      kindTabsEl.appendChild(chipButton(label, count, currentKind === type, function () { currentKind = type; render(); }));
+    });
+  }
+
+  // Program dropdown, populated from the programs actually on file for submitted requests.
+  function populateProgramFilter() {
+    const current = programFilterEl.value;
+    const seen = {};
+    const programsFound = [];
+    allItems.forEach(function (item) {
+      if (item.program && !seen[item.program]) { seen[item.program] = true; programsFound.push(item.program); }
+    });
+    programsFound.sort(function (a, b) { return a.localeCompare(b); });
+
+    programFilterEl.innerHTML = "<option value=\"\">All programs</option>";
+    programsFound.forEach(function (program) {
+      const opt = document.createElement("option");
+      opt.value = program;
+      opt.textContent = program;
+      programFilterEl.appendChild(opt);
+    });
+    if (programsFound.indexOf(current) !== -1) programFilterEl.value = current;
+  }
+
+  // Year level dropdown, ordered 1st year through 5th year rather than alphabetically.
+  function populateYearFilter() {
+    const current = yearFilterEl.value;
+    const seen = {};
+    const yearsFound = [];
+    allItems.forEach(function (item) {
+      if (item.yearLevel && !seen[item.yearLevel]) { seen[item.yearLevel] = true; yearsFound.push(item.yearLevel); }
+    });
+    yearsFound.sort(function (a, b) { return GUCO_YEAR_LEVELS.indexOf(a) - GUCO_YEAR_LEVELS.indexOf(b); });
+
+    yearFilterEl.innerHTML = "<option value=\"\">All year levels</option>";
+    yearsFound.forEach(function (year) {
+      const opt = document.createElement("option");
+      opt.value = year;
+      opt.textContent = year.charAt(0).toUpperCase() + year.slice(1);
+      yearFilterEl.appendChild(opt);
+    });
+    if (yearsFound.indexOf(current) !== -1) yearFilterEl.value = current;
+  }
+
+  function wireCardControls() {
+    sectionsEl.querySelectorAll(".status-select").forEach(function(sel){
+      sel.addEventListener("change", function(){
+        const ref = sel.getAttribute("data-ref");
+        const newStatus = sel.value;
+        const item = allItems.find(function(i){ return i.ref === ref; });
+        if (!item) return;
+
+        // Marking a counseling/peer session Completed for the first time needs proof it happened.
+        // Document/interview requests, and sessions that already have proof on file, go through as before.
+        const kind = gucoEvidenceKind(item.type);
+        if (newStatus === "done" && kind && !item.evidence) {
+          sel.value = item.status; // put the dropdown back until proof is confirmed
+          openEvidenceModal(item, kind);
+          return;
+        }
+
+        const wasStatus = item.status;
+        gucoUpdateRequestStatus(ref, newStatus);
+        item.status = newStatus;
+        sel.className = "status-select status-" + newStatus;
+
+        // Choosing Scheduled also opens the email to the student (this click counts as the
+        // user action browsers require, so the window isn't blocked). Staff add the date, time
+        // and venue, send it, and can minimize or close that window and carry on here.
+        if (newStatus === "scheduled" && wasStatus !== "scheduled") {
+          const href = emailLinkFor(item);
+          if (href) {
+            if (EMAIL_MODE === "gmail") {
+              const w = window.open(href, "_blank", "noopener");
+              if (!w) alert("Your browser blocked the email window. Allow pop-ups for this site, then set the status to Scheduled again.");
+            } else {
+              window.location.href = href;
+            }
+          }
+        }
+        render();
+      });
+    });
+    sectionsEl.querySelectorAll("[data-view-evidence]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        const item = allItems.find(function(i){ return i.ref === btn.getAttribute("data-view-evidence"); });
+        if (item && item.evidence) openLightbox(item.evidence.url);
+      });
+    });
+  }
+
+  const STATUS_ICON = {
+    pending: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    scheduled: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+  };
+  const STATUS_SUB = { pending: "Needs a response", scheduled: "Confirmed & upcoming", done: "Wrapped up" };
+
+  // Active view: Pending and Scheduled side by side, same board layout as the student
+  // history page. Completed view: its own single column, so it stays a deliberate,
+  // separate look-up rather than crowding the board staff check throughout the day.
+  function renderSections() {
+    sectionsEl.innerHTML = "";
+    const q = searchInput.value.trim().toLowerCase();
+    const programQ = programFilterEl.value;
+    const yearQ = yearFilterEl.value;
+    const scoped = allItems.filter(function (item) {
+      const matchesKind = currentKind === "all" || item.type === currentKind;
+      const matchesProgram = !programQ || item.program === programQ;
+      const matchesYear = !yearQ || item.yearLevel === yearQ;
+      const matchesQ = !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.ref.toLowerCase().includes(q) ||
+        item.label.toLowerCase().includes(q);
+      return matchesKind && matchesProgram && matchesYear && matchesQ;
+    });
+
+    liveNoMatch.style.display = (allItems.length > 0 && scoped.length === 0) ? "block" : "none";
+
+    const statusesToShow = currentView === "history" ? HISTORY_STATUSES : ACTIVE_STATUSES;
+    const board = document.createElement("div");
+    board.className = "req-board" + (statusesToShow.length === 1 ? " single" : "");
+
+    statusesToShow.forEach(function (status) {
+      const items = scoped.filter(function (i) { return i.status === status; });
+      const col = document.createElement("section");
+      col.id = "status-section-" + status;
+      col.className = "req-col";
+      col.setAttribute("data-status", status);
+      col.style.scrollMarginTop = "20px";
+
+      const head = document.createElement("div");
+      head.className = "req-col-head";
+      head.innerHTML =
+        "<span class=\"req-col-icon\">" + STATUS_ICON[status] + "</span>" +
+        "<div><h3>" + STATUS_LABEL[status] + "</h3><p>" + STATUS_SUB[status] + "</p></div>" +
+        "<span class=\"req-col-count\">" + items.length + "</span>";
+      col.appendChild(head);
+
+      if (items.length === 0) {
+        const none = document.createElement("p");
+        none.className = "status-empty";
+        none.textContent = STATUS_EMPTY_TEXT[status];
+        col.appendChild(none);
+      } else {
+        const list = document.createElement("div");
+        list.className = "req-col-list";
+        items.forEach(function (item) { list.appendChild(buildCard(item)); });
+        col.appendChild(list);
+      }
+      board.appendChild(col);
+    });
+    sectionsEl.appendChild(board);
+
+    wireCardControls();
+  }
+
+  function render() {
+    renderStatCards();
+    if (allItems.length === 0) {
+      liveEmpty.style.display = "block";
+      liveNoMatch.style.display = "none";
+      viewTabsEl.style.display = "none";
+      kindHeadingEl.style.display = "none";
+      kindTabsEl.style.display = "none";
+      sectionsEl.innerHTML = "";
+      return;
+    }
+    liveEmpty.style.display = "none";
+    viewTabsEl.style.display = "flex";
+    renderViewTabs();
+    renderKindTabs();
+    populateProgramFilter();
+    populateYearFilter();
+    renderSections();
+  }
+
+  // ---- evidence modal: photo for in-person sessions, screenshot for online ----
+  const evidenceBackdrop = document.getElementById("evidence-backdrop");
+  const evidenceInstructions = document.getElementById("evidence-instructions");
+  const evidenceFile = document.getElementById("evidence-file");
+  const evidencePreview = document.getElementById("evidence-preview");
+  const evidenceError = document.getElementById("evidence-error");
+  const evidenceCancel = document.getElementById("evidence-cancel");
+  const evidenceConfirm = document.getElementById("evidence-confirm");
+  let evidencePendingRef = null;
+  let evidenceDataUrl = null;
+
+  function openEvidenceModal(item, kind) {
+    evidencePendingRef = item.ref;
+    evidenceDataUrl = null;
+    evidenceFile.value = "";
+    evidencePreview.style.display = "none";
+    evidenceError.style.display = "none";
+    evidenceInstructions.textContent = kind === "screenshot"
+      ? "This was an online session, so a screenshot of the call is needed before it can be marked Completed."
+      : "This was a face-to-face session, so a photo showing it took place is needed before it can be marked Completed.";
+    evidenceBackdrop.classList.add("open");
+  }
+  function closeEvidenceModal() {
+    evidenceBackdrop.classList.remove("open");
+    evidencePendingRef = null;
+    evidenceDataUrl = null;
+  }
+  evidenceCancel.addEventListener("click", closeEvidenceModal);
+  evidenceBackdrop.addEventListener("click", function(e){ if (e.target === evidenceBackdrop) closeEvidenceModal(); });
+
+  evidenceFile.addEventListener("change", function () {
+    const file = evidenceFile.files[0];
+    evidenceError.style.display = "none";
+    if (!file) { evidencePreview.style.display = "none"; evidenceDataUrl = null; return; }
+    if (!file.type.startsWith("image/")) {
+      evidenceError.textContent = "Please choose an image file.";
+      evidenceError.style.display = "block";
+      evidenceFile.value = "";
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      evidenceError.textContent = "That image is a bit large \u2014 please use one under 4 MB.";
+      evidenceError.style.display = "block";
+      evidenceFile.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function () {
+      evidenceDataUrl = reader.result;
+      evidencePreview.src = evidenceDataUrl;
+      evidencePreview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  evidenceConfirm.addEventListener("click", function () {
+    if (!evidenceDataUrl) {
+      evidenceError.textContent = "Please attach an image first.";
+      evidenceError.style.display = "block";
+      return;
+    }
+    const ref = evidencePendingRef;
+    const filename = evidenceFile.files[0] ? evidenceFile.files[0].name : "evidence";
+    let updated;
+    try {
+      updated = gucoCompleteRequestWithEvidence(ref, evidenceDataUrl, filename);
+    } catch (e) {
+      evidenceError.textContent = (e && e.message) || "Couldn't save that image \u2014 try a smaller file.";
+      evidenceError.style.display = "block";
+      return;
+    }
+    const item = allItems.find(function(i){ return i.ref === ref; });
+    if (item && updated) { item.status = "done"; item.evidence = updated.evidence; }
+    closeEvidenceModal();
+    render();
+  });
+
+  // ---- lightbox for viewing saved proof ----
+  const lightboxBackdrop = document.getElementById("lightbox-backdrop");
+  const lightboxImg = document.getElementById("lightbox-img");
+  function openLightbox(dataUrl) {
+    lightboxImg.src = dataUrl;
+    lightboxBackdrop.classList.add("open");
+  }
+  function closeLightbox() { lightboxBackdrop.classList.remove("open"); lightboxImg.src = ""; }
+  document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
+  lightboxBackdrop.addEventListener("click", function(e){ if (e.target === lightboxBackdrop) closeLightbox(); });
+
+  searchInput.addEventListener("input", renderSections);
+  programFilterEl.addEventListener("change", renderSections);
+  yearFilterEl.addEventListener("change", renderSections);
+  render();
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

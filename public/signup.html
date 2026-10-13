@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create an account — GUCO</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script src="requests.js"></script>
+<script>
+  // Already signed in? Go straight to the right home.
+  (function () { var s = gucoGetSession(); if (s) window.location.replace(gucoHomeFor(s.role)); })();
+</script>
+<style>
+  /* Signup page only: a wider container, form gets more of the width
+     than the info panel, and fields run 3 (then 2) to a row instead of
+     stacking, so the whole form fits without scrolling. */
+  .auth-card.signup-card{max-width:1180px;grid-template-columns:.82fr 1.18fr;}
+  .signup-card .auth-form{padding:36px 48px 30px;}
+  .signup-card .field{margin-bottom:14px;}
+
+  .signup-grid,.pass-grid{display:grid;gap:0 14px;align-items:start;}
+  .signup-grid{grid-template-columns:repeat(3,1fr);}
+  .pass-grid{grid-template-columns:1fr 1fr;}
+  .signup-grid .field,.pass-grid .field{min-width:0;}
+
+  .field select{}
+  /* Student details row: ID, contact, year level, then program (wide) and major */
+  .sd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px;align-items:start;}
+  .sd-grid .field{min-width:0;}
+  .sd-grid .sd-program{grid-column:span 2;}
+  .sd-grid.no-major .sd-program{grid-column:1 / -1;}
+  .field-hint{font-size:.74rem;color:var(--ink-soft);margin-top:5px;line-height:1.35;}
+  @media (max-width:1000px){ .sd-grid{grid-template-columns:1fr 1fr;} .sd-grid .sd-program,.sd-grid.no-major .sd-program{grid-column:1 / -1;} }
+  @media (max-width:480px){ .sd-grid{grid-template-columns:1fr;} }
+  /* Smaller screens: stack the panel above the form (the two-column rule above
+     was beating the shared mobile rule in style.css) and loosen the field rows. */
+  @media (max-width:1000px){ .signup-grid{grid-template-columns:1fr 1fr;} }
+  @media (max-width:760px){
+    .auth-card.signup-card{grid-template-columns:1fr;max-width:480px;}
+    .signup-card .auth-form{padding:26px 22px 24px;}
+  }
+  @media (max-width:480px){ .signup-grid,.pass-grid{grid-template-columns:1fr;} }
+
+  @media (max-width:700px){.signup-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:420px){.signup-grid,.pass-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="crisis-strip"><p>In crisis or thinking about suicide? You don't have to wait for an appointment &mdash; call the NCMH Crisis Hotline <a href="tel:1553">1553</a> or <a href="tel:+639178998727">0917-899-8727</a>, free and confidential, 24/7.</p></div>
+<div class="auth-wrap">
+  <div class="auth-card signup-card">
+    <aside class="auth-side">
+      <span class="auth-eyebrow">Guidance and Counseling Unit</span>
+      <h2>One account for everything the office offers.</h2>
+      <p>Sign up once with your BPSU email, then request sessions, reach peer facilitators, and manage documents whenever you need to.</p>
+      <ul class="auth-points">
+        <li><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>Request counseling and documents online</li>
+        <li><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Talk to a trained peer facilitator</li>
+        <li><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg></span>Follow livestreams and share feedback</li>
+      </ul>
+    </aside>
+
+    <section class="auth-form">
+      <div class="auth-watermark" aria-hidden="true"></div>
+      <h1>Create your account</h1>
+      <p class="lede">Sign up with your BPSU email to request sessions and track your requests online.</p>
+      <form id="signup-form">
+        <div class="signup-grid">
+          <div class="field">
+            <label for="signup-lname">Last name</label>
+            <input type="text" id="signup-lname" placeholder="Dela Cruz" required autocomplete="family-name">
+          </div>
+          <div class="field">
+            <label for="signup-fname">First name</label>
+            <input type="text" id="signup-fname" placeholder="Juan" required autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label for="signup-mname">Middle name <span style="text-transform:none;">(optional)</span></label>
+            <input type="text" id="signup-mname" placeholder="Santos" autocomplete="additional-name">
+          </div>
+          <div class="field">
+            <label for="signup-suffix">Suffix <span style="text-transform:none;">(optional)</span></label>
+            <select id="signup-suffix">
+              <option value="">N/A</option>
+              <option value="Jr.">Jr.</option>
+              <option value="Sr.">Sr.</option>
+              <option value="II">II</option>
+              <option value="III">III</option>
+              <option value="IV">IV</option>
+              <option value="V">V</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="signup-gender">Gender</label>
+            <select id="signup-gender" required>
+              <option value="">Select gender</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="signup-email">BPSU email</label>
+            <input type="text" id="signup-email" placeholder="name@bpsu.edu.ph" autocomplete="username" required>
+          </div>
+        </div>
+        <div class="sd-grid no-major" id="sd-grid">
+          <div class="field">
+            <label for="signup-sid">Student ID</label>
+            <input type="text" id="signup-sid" placeholder="21-00000" required autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="signup-contact">Contact number</label>
+            <input type="tel" id="signup-contact" placeholder="09XXXXXXXXX" required autocomplete="tel" maxlength="16">
+          </div>
+          <div class="field">
+            <label for="signup-year">Year level</label>
+            <select id="signup-year" required></select>
+          </div>
+          <div class="field sd-program">
+            <label for="signup-program">Program</label>
+            <select id="signup-program" required></select>
+          </div>
+          <div class="field" id="signup-major-field" style="display:none;">
+            <label for="signup-major">Major</label>
+            <select id="signup-major"></select>
+          </div>
+        </div>
+        <p class="field-hint" style="margin:-4px 0 14px;">Your name and student ID should match your school ID. Once your account is approved, they are filled in on every request for you.</p>
+        <div class="pass-grid">
+          <div class="field">
+            <label for="signup-pass">Password</label>
+            <div class="pass-wrap">
+              <input type="password" id="signup-pass" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" data-pw-rules required>
+              <button type="button" class="pass-toggle" data-toggle-for="signup-pass" aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="signup-pass2">Confirm password</label>
+            <div class="pass-wrap">
+              <input type="password" id="signup-pass2" placeholder="Re-enter your password" autocomplete="new-password" minlength="8" required>
+              <button type="button" class="pass-toggle" data-toggle-for="signup-pass2" aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+          </div>
+        </div>
+        <div class="id-verify">
+          <h2>Verify you're a BPSU student</h2>
+          <p class="id-help">Attach clear photos of the front and back of your school ID. Make sure your name and photo can be read. Only GUCO staff who review accounts can see it, and it is deleted once your account is reviewed.</p>
+          <ul class="id-tips">
+            <li>All four corners of the ID are visible</li>
+            <li>Your name and photo are clear, with no glare or blur</li>
+            <li>Use your current BPSU student ID</li>
+          </ul>
+          <div class="id-grid">
+            <div class="field">
+              <label for="id-front">ID front</label>
+              <label class="id-drop" for="id-front" id="id-front-drop"><span class="id-drop-empty"><svg class="id-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="id-drop-text">Choose photo</span><span class="id-drop-sub">JPG, PNG or WebP</span></span><img id="id-front-preview" alt="Preview of the front of your ID" hidden></label>
+              <input type="file" id="id-front" accept="image/jpeg,image/png,image/webp" hidden>
+            </div>
+            <div class="field">
+              <label for="id-back">ID back</label>
+              <label class="id-drop" for="id-back" id="id-back-drop"><span class="id-drop-empty"><svg class="id-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="id-drop-text">Choose photo</span><span class="id-drop-sub">JPG, PNG or WebP</span></span><img id="id-back-preview" alt="Preview of the back of your ID" hidden></label>
+              <input type="file" id="id-back" accept="image/jpeg,image/png,image/webp" hidden>
+            </div>
+          </div>
+        </div>
+        <div class="consent">
+          <label class="consent-row" for="signup-consent">
+            <input type="checkbox" id="signup-consent">
+            <span>I agree that GUCO may use my ID photos only to verify that I am a BPSU student.</span>
+          </label>
+          <details class="consent-more">
+            <summary>How GUCO uses your ID</summary>
+            <p>Your ID photos are used for one purpose: to check that the name and photo match the details you entered. Only GUCO staff who review accounts can see them. The photos are deleted as soon as your account is approved or rejected. Your other details are used to run your GUCO account and requests.</p>
+          </details>
+        </div>
+        <p id="signup-error" role="alert" class="auth-error" style="display:none;"></p>
+        <button type="submit" id="signup-submit" class="btn solid auth-submit">Create account</button>
+      </form>
+      <div id="signup-done" class="signup-done" hidden>
+        <h2>Account submitted</h2>
+        <p>Thank you! GUCO will check your ID against the details you entered. Once it's approved you can sign in with your BPSU email and password.</p>
+        <a href="login.html" class="btn solid auth-submit">Back to sign in</a>
+      </div>
+      <p class="auth-note" id="signup-signin-note">Already have an account? <a href="login.html">Sign in</a></p>
+    </section>
+  </div>
+</div>
+<script>
+  var form = document.getElementById("signup-form");
+  var errorMsg = document.getElementById("signup-error");
+  var submitBtn = document.getElementById("signup-submit");
+
+  document.querySelectorAll(".pass-toggle").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var input = document.getElementById(btn.getAttribute("data-toggle-for"));
+      var show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Hide" : "Show";
+      btn.setAttribute("aria-pressed", show ? "true" : "false");
+      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    });
+  });
+
+  var mnameInput = document.getElementById("signup-mname");
+
+  // ---- Student ID, program and year level ----
+  gucoWireStudentIdInput(document.getElementById("signup-sid"));
+  var programSel = document.getElementById("signup-program");
+  var majorSel = document.getElementById("signup-major");
+  var majorField = document.getElementById("signup-major-field");
+  var yearSel = document.getElementById("signup-year");
+  var programList = gucoGetPrograms();   // the same list staff manage on the Programs page
+  function opt(value, label, extra) {
+    var o = document.createElement("option"); o.value = value; o.textContent = label;
+    return Object.assign(o, extra || {});
+  }
+  programSel.appendChild(opt("", programList.length ? "Choose a program" : "No programs listed yet", { disabled: true, selected: true }));
+  GUCO_PROGRAM_LEVELS.forEach(function (level) {
+    var inLevel = programList.filter(function (p) { return p.level === level; });
+    if (!inLevel.length) return;
+    var group = document.createElement("optgroup"); group.label = level;
+    inLevel.forEach(function (p) { group.appendChild(opt(p.name, p.name)); });
+    programSel.appendChild(group);
+  });
+  yearSel.appendChild(opt("", "Choose a year level", { disabled: true, selected: true }));
+  GUCO_YEAR_LEVELS.forEach(function (y) { yearSel.appendChild(opt(y, y)); });
+  programSel.addEventListener("change", function () {
+    var p = programList.filter(function (x) { return x.name === programSel.value; })[0];
+    majorSel.innerHTML = "";
+    var hasMajors = !!(p && p.majors.length);
+    if (hasMajors) {
+      majorSel.appendChild(opt("", "Choose a major", { disabled: true, selected: true }));
+      p.majors.forEach(function (m) { majorSel.appendChild(opt(m, m)); });
+    }
+    majorSel.required = hasMajors;
+    majorField.style.display = hasMajors ? "block" : "none";
+    document.getElementById("sd-grid").classList.toggle("no-major", !hasMajors);
+  });
+
+  // ---- ID photos: resized in the browser so they stay small ----
+  var idPhotos = { front: null, back: null };
+  function wireId(side) {
+    var input = document.getElementById("id-" + side);
+    var img = document.getElementById("id-" + side + "-preview");
+    var drop = document.getElementById("id-" + side + "-drop");
+    input.addEventListener("change", function () {
+      var file = input.files && input.files[0];
+      input.value = "";
+      if (!file) return;
+      errorMsg.style.display = "none";
+      gucoResizeImage(file, 1000, 0.72).then(function (url) {
+        idPhotos[side] = url;
+        img.src = url; img.hidden = false;
+        drop.classList.add("has-photo");
+        drop.querySelector(".id-drop-text").textContent = "Change photo";
+        drop.querySelector(".id-drop-sub").hidden = true;
+      }).catch(function (msg) {
+        errorMsg.textContent = msg; errorMsg.style.display = "block";
+      });
+    });
+  }
+  wireId("front"); wireId("back");
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    errorMsg.style.display = "none";
+
+    var lastName = document.getElementById("signup-lname").value.trim();
+    var firstName = document.getElementById("signup-fname").value.trim();
+    var middleName = mnameInput.value.trim();
+    var suffix = document.getElementById("signup-suffix").value;
+    var gender = document.getElementById("signup-gender").value;
+    var email = document.getElementById("signup-email").value.trim();
+    var studentId = document.getElementById("signup-sid").value.trim();
+    var contact = document.getElementById("signup-contact").value.trim();
+    var program = programSel.value;
+    var major = majorField.style.display === "none" ? "" : majorSel.value;
+    var yearLevel = yearSel.value;
+    var pass = document.getElementById("signup-pass").value;
+    var pass2 = document.getElementById("signup-pass2").value;
+
+    if (!gender) {
+      errorMsg.textContent = "Please select a gender.";
+      errorMsg.style.display = "block";
+      return;
+    }
+    if (!gucoIsStudentId(studentId)) {
+      errorMsg.textContent = "Enter your student ID in this format: 21-00000.";
+      errorMsg.style.display = "block";
+      return;
+    }
+    if (!gucoCleanMobile(contact)) {
+      errorMsg.textContent = "Enter a valid mobile number, like 09123456789.";
+      errorMsg.style.display = "block";
+      return;
+    }
+    if (!program || !yearLevel || (majorField.style.display !== "none" && !major)) {
+      errorMsg.textContent = "Choose your program" + (majorField.style.display !== "none" ? ", major" : "") + " and year level.";
+      errorMsg.style.display = "block";
+      return;
+    }
+    if (gucoPasswordError(pass)) {
+      errorMsg.textContent = gucoPasswordError(pass);
+      errorMsg.style.display = "block";
+      return;
+    }
+    if (pass !== pass2) {
+      errorMsg.textContent = "Passwords don't match.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    if (!document.getElementById("signup-consent").checked) {
+      errorMsg.textContent = "Please tick the box to agree to how GUCO uses your ID photos.";
+      errorMsg.style.display = "block";
+      return;
+    }
+    if (!idPhotos.front || !idPhotos.back) {
+      errorMsg.textContent = "Attach a photo of the front and the back of your school ID.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    submitBtn.disabled = true;
+    var result = gucoSignUpStudent({
+      lastName: lastName,
+      firstName: firstName,
+      middleName: middleName,
+      suffix: suffix,
+      gender: gender,
+      studentId: studentId,
+      contact: contact,
+      program: program,
+      major: major,
+      yearLevel: yearLevel,
+      email: email,
+      password: pass,
+      idFront: idPhotos.front,
+      idBack: idPhotos.back
+    });
+
+    if (!result.ok) {
+      errorMsg.textContent = result.error;
+      errorMsg.style.display = "block";
+      submitBtn.disabled = false;
+      return;
+    }
+
+    // no auto sign-in: the account is pending until GUCO approves the ID
+    form.hidden = true;
+    document.querySelector(".auth-form .lede").hidden = true;
+    document.getElementById("signup-signin-note").hidden = true;
+    document.getElementById("signup-done").hidden = false;
+    window.scrollTo(0, 0);
+  });
+</script>
+</body>
+</html>

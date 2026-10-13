@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request — Guidance and Counseling, BPSU Main Campus</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ---- request form layout: wide, grouped into steps, fits one screen ---- */
+  main.request-main{max-width:1280px;padding-bottom:28px;}
+  .req-hero{padding-top:26px;}
+  .req-hero h1{margin:4px 0 6px;}
+  .req-hero p.lede{max-width:none;font-size:1rem;margin:0;}
+
+  .req-panel{margin:14px 0 0;padding:20px 26px 22px;}
+  .form-section{padding-top:14px;margin-top:14px;border-top:1px solid var(--line);}
+  .form-section:first-child{padding-top:0;margin-top:0;border-top:none;}
+  .form-section-title{
+    display:flex;align-items:center;gap:9px;margin:0 0 12px;
+    font-family:var(--font-body);font-size:.75rem;font-weight:700;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--maroon-deep);
+  }
+  .form-section-title .step{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--maroon);color:var(--cream);font-size:.75rem;letter-spacing:0;
+  }
+
+  .form-grid{display:grid;gap:0 16px;}
+  .form-grid .field{margin-bottom:12px;min-width:0;}
+  .g-name{grid-template-columns:1fr 1.3fr 1.3fr 1.3fr .75fr;}
+  .g-program{grid-template-columns:2fr 1.4fr 1fr;}
+  .g-program.no-major{grid-template-columns:2fr 1fr;}
+  .g-details{grid-template-columns:1.5fr 1fr 1.5fr;}
+
+  #request-form select{}
+  #request-form .field label.check{
+    display:flex;align-items:center;gap:8px;margin:7px 0 0;
+    font-size:.78rem;letter-spacing:0;text-transform:none;cursor:pointer;
+  }
+  #request-form .field input[type="checkbox"]{width:auto;margin:0;accent-color:var(--maroon);}
+  #request-form input:disabled{opacity:.55;cursor:not-allowed;}
+  /* details that come from the account and match the approved ID card */
+  #request-form input[readonly],#request-form select.locked{background:var(--cream-deep);color:var(--ink-soft);cursor:not-allowed;}
+  #request-form select.locked{pointer-events:none;}
+  .locked-note{margin:-2px 0 0;font-size:.78rem;color:var(--ink-soft);}
+
+  .form-footer{
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding-top:16px;margin-top:4px;border-top:1px solid var(--line);
+  }
+  .form-footer .turnaround{margin:0;font-size:.82rem;color:var(--ink-soft);}
+  #form-error{margin:12px 0 0;}
+  /* confirmation box: style.css only colours ".card.on-maroon", so give ".panel" its own maroon look */
+  .panel.confirm-panel{
+    max-width:640px;margin-top:14px;
+    background:var(--maroon);border-color:var(--maroon);color:var(--cream);
+  }
+  .panel.confirm-panel .tag{color:var(--yellow);}
+  .panel.confirm-panel p{color:var(--cream);}
+  .panel.confirm-panel strong{font-size:1.15rem;letter-spacing:.02em;}
+
+  /* smaller screens: two columns, then one */
+  @media (max-width:1100px){
+    .g-name,.g-program,.g-program.no-major,.g-details{grid-template-columns:1fr 1fr;}
+    .g-program > .field:first-child,.g-details > .field:last-child{grid-column:1 / -1;}
+  }
+  @media (max-width:560px){
+    .g-name,.g-program,.g-program.no-major,.g-details{grid-template-columns:1fr;}
+    .req-panel{padding:18px 18px 20px;}
+  }
+</style>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script>gucoRequireRole("student");</script>
+</head>
+<body>
+<div class="crisis-strip"><p>In crisis or thinking about suicide? You don't have to wait for an appointment &mdash; call the NCMH Crisis Hotline <a href="tel:1553">1553</a> or <a href="tel:+639178998727">0917-899-8727</a>, free and confidential, 24/7.</p></div>
+<div class="app-shell">
+<aside class="sidebar">
+<div class="sidebar-inner">
+<header class="topbar">
+  <div class="topbar-brand">
+    <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University" class="brand-logo">
+    <span class="staff-badge">Student portal</span>
+  </div>
+  <button type="button" class="sidebar-toggle" aria-expanded="false" aria-controls="sidebar-nav">Menu</button>
+  </header>
+<nav class="main-nav" id="sidebar-nav">
+<div class="main-nav-links">
+<a href="student-home.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+<a href="student-about.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About GUCO</a>
+<div class="nav-item" data-dropdown>
+<a href="student-requests.html" class="active"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Requests <span class="nav-caret" aria-hidden="true"></span></a>
+<div class="nav-dropdown">
+<a href="student-requests.html?tab=sessions">Counseling and Peers</a>
+<a href="student-requests.html?tab=documents">Documents &amp; interviews</a>
+</div>
+</div>
+<a href="student-peers.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Peer facilitators</a>
+<a href="student-live.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>Live</a>
+<a href="student-history.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/><polyline points="12 7 12 12 15 14"/></svg>History</a>
+<a href="student-contact.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Contact</a>
+<a href="student-faq.html" class=""><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>FAQ</a>
+</div>
+<div class="user-chip"><span class="user-avatar" id="user-initial">S</span><span class="user-meta"><span class="user-role">Signed in as</span><span class="user-email" id="user-email">Student</span></span></div>
+<a href="#" class="nav-logout" onclick="gucoSignOut();return false;">Logout</a>
+</nav>
+</div>
+</aside>
+<div class="app-content">
+<main class="request-main">
+
+<section class="hero req-hero">
+  <p class="eyebrow" id="type-tag">Request</p>
+  <h1 id="type-title">Send a request</h1>
+  <p class="lede" id="type-desc">Fill in your details and we'll get back to you.</p>
+</section>
+
+<form id="request-form" class="panel req-panel">
+
+  <div class="form-section">
+    <h2 class="form-section-title"><span class="step">1</span>About you</h2>
+    <div class="form-grid g-name">
+      <div class="field">
+        <label for="sid">Student ID</label>
+        <input type="text" id="sid" placeholder="21-00000" required autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="lname">Last name</label>
+        <input type="text" id="lname" placeholder="Dela Cruz" required autocomplete="family-name">
+      </div>
+      <div class="field">
+        <label for="fname">First name</label>
+        <input type="text" id="fname" placeholder="Juan" required autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label for="mname">Middle name</label>
+        <input type="text" id="mname" placeholder="Santos" autocomplete="additional-name">
+        <label class="check" for="mname-na"><input type="checkbox" id="mname-na"> No middle name (N/A)</label>
+      </div>
+      <div class="field">
+        <label for="suffix">Suffix</label>
+        <select id="suffix">
+          <option value="">N/A</option>
+          <option value="Jr.">Jr.</option>
+          <option value="Sr.">Sr.</option>
+          <option value="II">II</option>
+          <option value="III">III</option>
+          <option value="IV">IV</option>
+          <option value="V">V</option>
+        </select>
+      </div>
+    </div>
+    <p class="locked-note" id="locked-note" hidden>These details come from your account and match your school ID, so they can't be edited here. If something is wrong, contact GUCO.</p>
+  </div>
+
+  <div class="form-section">
+    <h2 class="form-section-title"><span class="step">2</span>Your program</h2>
+    <div class="form-grid g-program no-major" id="program-row">
+      <div class="field">
+        <label for="program">Program</label>
+        <select id="program" required></select>
+      </div>
+      <div class="field" id="major-field" style="display:none;">
+        <label for="major">Major</label>
+        <select id="major"></select>
+      </div>
+      <div class="field">
+        <label for="yearlevel">Year level</label>
+        <select id="yearlevel" required></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h2 class="form-section-title"><span class="step">3</span>Request details</h2>
+    <div class="form-grid g-details">
+      <div class="field">
+        <label for="contact">Contact number or email</label>
+        <input type="text" id="contact" placeholder="09XXXXXXXXX or name@bpsu.edu.ph" required>
+      </div>
+      <div class="field">
+        <label for="preferred-display">Preferred date</label>
+        <input type="text" id="preferred-display" placeholder="Select a date" autocomplete="off">
+        <input type="hidden" id="preferred">
+      </div>
+      <div class="field" id="platform-field" style="display:none;">
+        <label>Platform</label>
+        <p style="margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--cream-deep);font-size:.9rem;color:var(--ink);">Google Meet &mdash; the university's official platform for online sessions.</p>
+      </div>
+      <div class="field">
+        <label for="notes">Purpose or notes (optional)</label>
+        <input type="text" id="notes" placeholder="What this request is for">
+      </div>
+    </div>
+  </div>
+
+  <p id="form-error" style="display:none;color:var(--maroon);font-size:.82rem;">Please fill in all required fields.</p>
+  <div class="form-footer">
+    <button type="submit" class="btn solid">Submit request</button>
+    <p id="type-turnaround" class="turnaround"></p>
+  </div>
+</form>
+
+<div id="confirmation" class="panel on-maroon confirm-panel" style="display:none;">
+  <span class="tag">Submitted</span>
+  <h3 style="color:var(--cream)">Your request is in.</h3>
+  <p>Reference number: <strong id="ref-number" style="color:var(--cream)"></strong></p>
+  <p id="confirmation-turnaround">Keep this number — the office will use it to update your request status. You'll be contacted through the details you provided.</p>
+  <a href="student-requests.html" class="btn" style="border-color:var(--cream);color:var(--cream);">Back to counseling &rarr;</a>
+</div>
+
+</main>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div>
+      <div class="footer-brand">
+        <img src="assets/guco-logo-light.png" alt="GUCO — Guidance and Counseling Unit, Bataan Peninsula State University">
+        <div class="footer-brand-text"><strong>Guidance and Counseling Services</strong><span>Bataan Peninsula State University — Main Campus</span></div>
+      </div>
+      <p style="max-width:34ch;">GUCO is Main Campus's guide to counseling, peer support, and document requests — all in one confidential system.</p>
+      <div class="social-links" style="margin-top:14px;"><a class="social-link" href="https://www.facebook.com/bpsumcguidance/" target="_blank" rel="noopener noreferrer" aria-label="GUCO on Facebook" title="Facebook"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></a></div>
+    </div>
+    <div>
+      <h4>Quick links</h4>
+      <div class="site-footer-links">
+        <a href="student-home.html">Home</a>
+        <a href="student-about.html">About GUCO</a>
+        <a href="student-requests.html">Requests</a>
+        <a href="student-peers.html">Peer facilitators</a>
+        <a href="student-live.html">Live</a>
+        <a href="student-faq.html">FAQ</a>
+      </div>
+    </div>
+    <div>
+      <h4>Contact us</h4>
+      <div class="site-footer-links">
+        <a href="mailto:guidance_mc@bpsu.edu.ph">guidance_mc@bpsu.edu.ph</a>
+        <a href="tel:09688530978">09688530978</a>
+        <a href="https://www.facebook.com/bpsumcguidance/" target="_blank" rel="noopener noreferrer">facebook.com/bpsumcguidance</a>
+      </div>
+    </div>
+  </div>
+  <div class="site-footer-bottom">&copy; 2026 GUCO, BPSU Main Campus. All rights reserved.</div>
+</footer>
+</div>
+</div>
+<script src="requests.js"></script>
+<script src="datepicker.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const type = params.get("type") || "facetoface";
+  const meta = REQUEST_TYPES[type] || REQUEST_TYPES.facetoface;
+
+  // Safety net for the rule enforced on student-requests.html: a session or document/interview
+  // request can't be booked while an earlier completed one of that same kind is still waiting
+  // on the student's evaluation. (Reachable directly by URL, so it's checked here too.)
+  {
+    let loggedInEmail = "";
+    loggedInEmail = ((gucoGetSession() || {}).email || "").toLowerCase();
+    const pending = loggedInEmail ? gucoPendingEvaluations(loggedInEmail, meta.group) : [];
+    if (pending.length) {
+      window.location.replace("student-requests.html" + (meta.group === "document" ? "?tab=documents" : ""));
+    }
+    // Only one open session request at a time (also checked again on submit below).
+    if (meta.group === "session" && loggedInEmail &&
+        gucoOpenSessionRequest(loggedInEmail, gucoGetProfile(loggedInEmail, "student").studentId)) {
+      window.location.replace("student-requests.html");
+    }
+  }
+
+  document.getElementById("type-tag").textContent = meta.tag;
+  document.getElementById("type-title").textContent = meta.label;
+  document.title = meta.label + " — Guidance and Counseling, BPSU Main Campus";
+  document.getElementById("type-desc").textContent =
+    meta.group === "session"
+      ? "Tell us a bit about you so a counselor can prepare for your session."
+      : "This request is processed by the office directly, separate from a counseling session.";
+
+  const turnaroundText = meta.group === "session"
+    ? "Session requests are usually scheduled within 2\u20133 working days."
+    : "Document and interview requests are usually processed within 3\u20135 working days.";
+  document.getElementById("type-turnaround").textContent = turnaroundText;
+  document.getElementById("confirmation-turnaround").textContent =
+    "Keep this number \u2014 the office will use it to update your request status. " + turnaroundText +
+    " You'll be contacted through the details you provided.";
+
+  const form = document.getElementById("request-form");
+  const errorMsg = document.getElementById("form-error");
+
+  // "No middle name (N/A)" locks the middle name box so it can't be left blank by accident.
+  const mnameInput = document.getElementById("mname");
+  const mnameNA = document.getElementById("mname-na");
+  mnameNA.addEventListener("change", function () {
+    mnameInput.disabled = mnameNA.checked;
+    if (mnameNA.checked) mnameInput.value = "";
+    else mnameInput.focus();
+  });
+
+  // ---- Program / Major / Year level dropdowns ----
+  // The program list is edited by staff on the admin Programs page (gucoGetPrograms in requests.js).
+  const programSelect = document.getElementById("program");
+  const majorSelect = document.getElementById("major");
+  const majorField = document.getElementById("major-field");
+  const yearSelect = document.getElementById("yearlevel");
+  const programs = gucoGetPrograms();
+
+  function optionHTML(value, label) {
+    const o = document.createElement("option");
+    o.value = value; o.textContent = label;
+    return o;
+  }
+
+  programSelect.appendChild(Object.assign(optionHTML("", programs.length ? "Choose a program" : "No programs listed yet"), { disabled: true, selected: true }));
+  GUCO_PROGRAM_LEVELS.forEach(function (level) {
+    const inLevel = programs.filter(function (p) { return p.level === level; });
+    if (!inLevel.length) return;
+    const group = document.createElement("optgroup");
+    group.label = level;
+    inLevel.forEach(function (p) { group.appendChild(optionHTML(p.id, p.name)); });
+    programSelect.appendChild(group);
+  });
+
+  yearSelect.appendChild(Object.assign(optionHTML("", "Choose a year level"), { disabled: true, selected: true }));
+  GUCO_YEAR_LEVELS.forEach(function (y) { yearSelect.appendChild(optionHTML(y, y)); });
+
+  // Only programs that have majors get a Major dropdown (and it becomes required).
+  programSelect.addEventListener("change", function () {
+    const p = programs.find(function (x) { return x.id === programSelect.value; });
+    majorSelect.innerHTML = "";
+    if (p && p.majors.length) {
+      majorSelect.appendChild(Object.assign(optionHTML("", "Choose a major"), { disabled: true, selected: true }));
+      p.majors.forEach(function (m) { majorSelect.appendChild(optionHTML(m, m)); });
+      majorSelect.required = true;
+      majorField.style.display = "block";
+      document.getElementById("program-row").classList.remove("no-major");
+    } else {
+      majorSelect.required = false;
+      majorField.style.display = "none";
+      document.getElementById("program-row").classList.add("no-major");
+    }
+  });
+
+  // ---- Preferred date: weekends, holidays and past dates are greyed out ----
+  // Holidays come from the list staff edit on admin-holidays.html.
+  const datePicker = gucoDatePicker({
+    display: document.getElementById("preferred-display"),
+    hidden: document.getElementById("preferred")
+  });
+
+  // ---- Prefill from the signed-in student's account ----
+  // Name and student ID are locked when the account has a student ID (they match the ID
+  // card staff approved). Program, major, year level and contact stay editable, since
+  // students move up a year and change numbers.
+  {
+    const sess = gucoGetSession() || {};
+    const prof = gucoGetProfile(sess.email, "student");
+    const sidInput = document.getElementById("sid");
+    const lnameInput = document.getElementById("lname");
+    const fnameInput = document.getElementById("fname");
+    const suffixSelect = document.getElementById("suffix");
+    if (prof.lastName) lnameInput.value = prof.lastName;
+    if (prof.firstName) fnameInput.value = prof.firstName;
+    if (prof.lastName && prof.firstName) {
+      if (prof.middleName) mnameInput.value = prof.middleName;
+      else { mnameNA.checked = true; mnameInput.disabled = true; }   // account has no middle name
+      if (prof.suffix) suffixSelect.value = prof.suffix;
+    }
+    if (prof.studentId) sidInput.value = prof.studentId;
+    if (prof.contact) document.getElementById("contact").value = prof.contact;
+
+    const savedProgram = programs.find(function (x) { return x.name === prof.program; });
+    if (savedProgram) {
+      programSelect.value = savedProgram.id;
+      programSelect.dispatchEvent(new Event("change"));      // builds the Major list
+      if (prof.major && prof.major !== "N/A") majorSelect.value = prof.major;
+    }
+    if (prof.yearLevel && GUCO_YEAR_LEVELS.indexOf(prof.yearLevel) !== -1) yearSelect.value = prof.yearLevel;
+
+    if (prof.studentId) {
+      [sidInput, lnameInput, fnameInput, mnameInput].forEach(function (i) { i.readOnly = true; });
+      mnameNA.disabled = true;
+      suffixSelect.disabled = true; suffixSelect.classList.add("locked");
+      document.getElementById("locked-note").hidden = false;
+    }
+  }
+
+  // Online counseling always runs on Google Meet -- BPSU's official platform -- so this
+  // is shown as a fixed notice, not a choice. Folded into notes on submit so the admin
+  // Requests table (which just shows Preferred / notes) needs no changes.
+  const platformField = document.getElementById("platform-field");
+  if (type === "online") platformField.style.display = "block";
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const sid = document.getElementById("sid").value.trim();
+    const lname = document.getElementById("lname").value.trim();
+    const fname = document.getElementById("fname").value.trim();
+    const mname = mnameNA.checked ? "N/A" : mnameInput.value.trim();
+    const suffix = document.getElementById("suffix").value || "N/A";
+    const chosen = programs.find(function (x) { return x.id === programSelect.value; });
+    const program = chosen ? chosen.name : "";
+    const hasMajors = !!(chosen && chosen.majors.length);
+    const major = hasMajors ? majorSelect.value : "N/A";
+    const yearLevel = yearSelect.value;
+    const contact = document.getElementById("contact").value.trim();
+
+    // Middle name must be filled in OR explicitly marked N/A. Major is required only if the program has majors.
+    if (!sid || !lname || !fname || !mname || !program || !major || !yearLevel || !contact) {
+      errorMsg.textContent = "Please fill in all required fields.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    // The date may have become unavailable since it was picked (e.g. staff added a holiday).
+    const dateProblem = datePicker.check();
+    if (dateProblem) {
+      datePicker.clear();
+      errorMsg.textContent = "That preferred date is no longer available (" + dateProblem + "). Please choose another date.";
+      errorMsg.style.display = "block";
+      return;
+    }
+    errorMsg.style.display = "none";
+
+    // Combined display name, "Dela Cruz, Juan Santos Jr." — N/A parts are left out.
+    // The admin pages read this single "name" field, so they keep working unchanged.
+    const fullName = lname + ", " + fname +
+      (mname !== "N/A" ? " " + mname : "") +
+      (suffix !== "N/A" ? " " + suffix : "");
+
+    const rawNotes = document.getElementById("notes").value.trim();
+    const notes = type === "online"
+      ? "Platform: Google Meet." + (rawNotes ? " " + rawNotes : "")
+      : (rawNotes || "—");
+
+    // Last check before saving (another tab may have submitted a session meanwhile).
+    if (meta.group === "session" && gucoOpenSessionRequest(((gucoGetSession() || {}).email || ""), sid)) {
+      errorMsg.textContent = "You already have a session request that isn't completed yet. You can request another once it is completed.";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    // The server assigns the reference number and takes the name / student ID from the verified account.
+    const saved = gucoSaveRequest({
+      type: type,
+      program: program,
+      major: major,
+      yearLevel: yearLevel,
+      contact: contact,
+      preferred: document.getElementById("preferred").value || "\u2014",
+      notes: notes
+    });
+    if (!saved.ok) {
+      errorMsg.textContent = saved.error;
+      errorMsg.style.display = "block";
+      return;
+    }
+    const ref = saved.entry.ref;
+
+    form.style.display = "none";
+    document.getElementById("ref-number").textContent = ref;
+    document.getElementById("confirmation").style.display = "block";
+  });
+</script>
+<script src="nav.js"></script>
+</body>
+</html>
